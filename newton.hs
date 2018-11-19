@@ -6,32 +6,36 @@ where
 import Data.Complex
 import Control.Parallel
 import Control.DeepSeq
-type ComplexFunction = (Complex Double -> Complex Double)
+import Data.Word
+import FractalSettings
+import qualified ByteString.StrictBuilder as BSBS
+import qualified Data.ByteString as BS
+import Colouring
 
-
-mapFractal :: ComplexFunction -> ComplexFunction -> (Double, Double) -> (Double, Double) -> (Int, Int) -> Int -> Double -> [[(Complex Double, Int)]]
-mapFractal f f' (bx,by) (fracW, fracH) (pixW, pixH) inters eps =
-    [ [ nM (((bx + (fracXAtX x))) :+ (by + (fracYAtY y))) | x <- [0..pixW-1] ] | y <- [0..pixH - 1]]
+mapFractal :: ComplexFunction -> ComplexFunction -> FractalSettings -> (Double, Double) -> (Double, Double) -> (Int, Int) -> Int -> Double -> BSBS.Builder
+mapFractal f f' fs (bx,by) (fracW, fracH) (pixW, pixH) inters eps =  mconcat [nM (((bx + (fracXAtX x))) :+ (by + (fracYAtY y))) | x <- [0..pixW-1] , y <- [0..pixH - 1]]
   where
-        nM comDouble = newtonMethod comDouble f f' inters eps
+        nM comDouble = applyColourFunc fs $ newtonMethod comDouble f f' inters eps
         toD = fromIntegral
         fracXAtX x= (toD x*) $ fracW / (toD pixW)
         fracYAtY y= (toD y*) $ fracH / (toD pixH)
 
-generateImage :: ComplexFunction -> ComplexFunction -> (Double,Double) -> (Double,Double) -> (Int,Int) -> Int -> Double -> [[(Complex Double, Int)]]
-generateImage f f' (minfX,minfY) (fTotalW,fTotalH) (pixTotalW,pixTotalH) inters eps = concat $ testf (nmOnBox) [  (x,y) |x <- [0..(xBoxes-1)] , y <- [0..(yBoxes-1)] ]
-  where nmOnBox (x,y) = mapFractal f f' (minfX + fracXAtX x ,minfY + fracYAtY y) (fTotalW / (toD xBoxes) , fTotalH / (toD yBoxes)) (pixTotalW `div` xBoxes , pixTotalH `div` yBoxes) inters eps
+generateImage :: ComplexFunction -> ComplexFunction -> FractalSettings -> BS.ByteString
+generateImage f f' fs =BSBS.builderBytes $ testf (nmOnBox) [(x,y) |x <- [0..(xBoxes-1)] , y <- [0..(yBoxes-1)]]
+  where nmOnBox (x,y) = mapFractal f f' fs (minfX + fracXAtX x ,minfY + fracYAtY y) (fTotalW / (toD xBoxes) , fTotalH / (toD yBoxes)) (pixTotalW `div` xBoxes , pixTotalH `div` yBoxes) inters eps
         toD = fromIntegral
+        (minfX, minfY, fTotalW,fTotalH) = (fsXBound2 fs, fsYBound2 fs,(fsXBound1 fs) - (fsXBound2 fs),(fsYBound1 fs - fsYBound2 fs))
+        (pixTotalW,pixTotalH,inters,eps) =(fsWid fs, fsHei fs,fsIters fs,fsEpsilon fs)
         fracXAtX x= (toD (x * xStep)*) $ fTotalW / (toD pixTotalW)
         fracYAtY y= (toD (y * yStep)*) $ fTotalH/ (toD pixTotalH)
-        (xBoxes,yBoxes) = (4,4)
+        (xBoxes,yBoxes) = (1,2) -- keep X at 1 otherwise will not merge correctly
         xStep = pixTotalH `div` xBoxes
         yStep = pixTotalW `div` yBoxes
 
-testf :: ((Int,Int) -> [[(Complex Double,Int)]]) -> [(Int,Int)] -> [[[(Complex Double, Int)]]]
-testf f [x] = [f x]
-testf f (x:xs) = (ef) `par` (ef : etestf)
-  where ef = force (f x)
+testf :: ((Int,Int) -> BSBS.Builder) -> [(Int,Int)] -> BSBS.Builder
+testf f [x] = f x
+testf f (x:xs) = (ef) `par` ((<>)ef etestf)
+  where ef = (f x) -- force was taken out due to BSBS, don't know it that's good
         etestf = testf f xs
 
 newtonMethod :: Complex Double-> ComplexFunction -> ComplexFunction -> Int -> Double -> (Complex Double,Int)
