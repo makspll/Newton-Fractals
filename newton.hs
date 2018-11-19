@@ -13,7 +13,7 @@ import qualified Data.ByteString as BS
 import Colouring
 
 mapFractal :: ComplexFunction -> ComplexFunction -> FractalSettings -> (Double, Double) -> (Double, Double) -> (Int, Int) -> Int -> Double -> BSBS.Builder
-mapFractal f f' fs (bx,by) (fracW, fracH) (pixW, pixH) inters eps =  mconcat [nM (((bx + (fracXAtX x))) :+ (by + (fracYAtY y))) | x <- [0..pixW-1] , y <- [0..pixH - 1]]
+mapFractal f f' fs (bx,by) (fracW, fracH) (pixW, pixH) inters eps =  mconcat[mconcat[nM (((bx + (fracXAtX x))) :+ (by + (fracYAtY y))) | x <- [0..pixW-1]] | y <- [0..pixH - 1]]
   where
         nM comDouble = applyColourFunc fs $ newtonMethod comDouble f f' inters eps
         toD = fromIntegral
