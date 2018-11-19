@@ -1,0 +1,3 @@
+ghc --make -threaded -O2 -prof -fprof-auto ver1.hs newton.hs
+ver1 +RTS -p -hy -N2
+ghc hp2ps -c ver1.hp
