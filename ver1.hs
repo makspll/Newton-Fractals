@@ -170,8 +170,8 @@ validateI x = fromMaybe (0) $readMaybe (x)
 -----------------------------------------------------------------------------Rendering
 write :: ComplexFunction -> ComplexFunction -> FractalSettings -> String -> IO ()
 write f f' fs filename =  writeBMP filename bmp >> putStrLn ("Saved:" ++ filename)
-  where rgba = map (map (applyColourFunc fs)) 
-            (mapFractal f f' (fsXBound2 fs, fsYBound2 fs) (fsXBound1 fs - fsXBound2 fs, fsYBound1 fs - fsYBound2 fs) (fsWid fs, fsHei fs) (fsIters fs) (fsEpsilon fs) )
+  where rgba = map (map (applyColourFunc fs))
+            (generateImage f f' (fsXBound2 fs, fsYBound2 fs) (fsXBound1 fs - fsXBound2 fs, fsYBound1 fs - fsYBound2 fs) (fsWid fs, fsHei fs) (fsIters fs) (fsEpsilon fs) )
         bmp = packRGBA32ToBMP (fsWid fs) (fsHei fs) (BS.pack $ concat.concat $ rgba)
 
 simAnimate :: FractalSettings -> ComplexFunction -> ComplexFunction -> Int -> IO ()
@@ -237,16 +237,16 @@ scaleVar x (maxX,minX) (newXMax,newXMin) = newXMin + (((newXMax - newXMin) * (cX
 ---------------------------------------------------------------------------- Impure Part
 --doAnimate :: Int -> Complex Double -> Double -> IO ()
 --doAnimate n (a:+b) z = mapM_ (animateF (a:+b) z) [1..n]
-testSettings2 = FS (100,100) ((1,-1),(1,-1)) (Param (Cutoff 20 0.000001) rootcolours 20 0.000001) (ParameterShift (psIterations) (0,1) 3)
+testSettings2 = FS (2000,2000) ((1,-1),(1,-1)) (Param (Cutoff 20 0.000001) rootcolours 20 0.000001) (ParameterShift (psIterations) (0,1) 3)
 
 #ifdef __GUI_APP
 main = do
     win <- Win.create
     return (0)
 
-#else
+ #else
 main = do
-       Control.Concurrent.setNumCapabilities 6
+       getNumCapabilities >>= setNumCapabilities
        putStrLn "Frames number:"
        nm <- getLine
        --fs <- inputFS
@@ -256,5 +256,6 @@ main = do
          write (mandelbrotFunc) (mandelbrotFunc') fs (filename ++ ".bmp")
        else
          mapM_ (simAnimate fs (mandelbrotFunc) (mandelbrotFunc')) [0..n]
+       main
        --(simAnimate testSettings (Zoom (0:+0) 2) (mandelbrotFunc) (mandelbrotFunc')) [0..10]
 #endif
