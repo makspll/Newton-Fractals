@@ -1,0 +1,32 @@
+	Mon Nov 19 04:49 2018 Time and Allocation Profiling Report  (Final)
+
+	   ver1 +RTS -p -hy -N8 -RTS
+
+	total time  =        0.00 secs   (5 ticks @ 1000 us, 8 processors)
+	total alloc =      76,776 bytes  (excludes profiling overheads)
+
+COST CENTRE MODULE                   SRC                       %time %alloc
+
+main        Main                     ver1.hs:(248,1)-(259,11)   60.0   20.0
+MAIN        MAIN                     <built-in>                 20.0    4.0
+CAF         GHC.IO.Encoding.CodePage <entire-module>            20.0    0.2
+CAF         Main                     <entire-module>             0.0    1.4
+CAF         GHC.IO.Exception         <entire-module>             0.0    3.2
+CAF         GHC.IO.Handle.FD         <entire-module>             0.0   68.6
+
+
+                                                                                  individual      inherited
+COST CENTRE  MODULE                   SRC                      no.     entries  %time %alloc   %time %alloc
+
+MAIN         MAIN                     <built-in>                65          0   20.0    4.0   100.0  100.0
+ CAF         GHC.IO.Encoding.CodePage <entire-module>          114          0   20.0    0.2    20.0    0.2
+ CAF         GHC.Conc.Windows         <entire-module>          109          0    0.0    0.3     0.0    0.3
+ CAF         GHC.IO.Encoding          <entire-module>          104          0    0.0    0.4     0.0    0.4
+ CAF         GHC.Conc.Sync            <entire-module>          103          0    0.0    1.0     0.0    1.0
+ CAF         GHC.IO.Handle.Text       <entire-module>           97          0    0.0    0.9     0.0    0.9
+ CAF         GHC.IO.Handle.Internals  <entire-module>           96          0    0.0    0.0     0.0    0.0
+ CAF         GHC.IO.Handle.FD         <entire-module>           95          0    0.0   68.6     0.0   68.6
+ CAF         GHC.IO.Exception         <entire-module>           93          0    0.0    3.2     0.0    3.2
+ CAF         Main                     <entire-module>           73          0    0.0    1.4     0.0    1.4
+  main       Main                     ver1.hs:(248,1)-(259,11) 130          1    0.0    0.0     0.0    0.0
+ main        Main                     ver1.hs:(248,1)-(259,11) 131          0   60.0   20.0    60.0   20.0
