@@ -34,7 +34,7 @@ generateImage f f' fs =BSBS.builderBytes $ testf (nmOnBox) [(x,y) |x <- [0..(xBo
 
 testf :: ((Int,Int) -> BSBS.Builder) -> [(Int,Int)] -> BSBS.Builder
 testf f [x] = f x
-testf f (x:xs) = (ef) `par` ((<>)ef etestf)
+testf f (x:xs) = (ef) `par` (mappend ef etestf)
   where ef = (f x) -- force was taken out due to BSBS, don't know it that's good
         etestf = testf f xs
 
