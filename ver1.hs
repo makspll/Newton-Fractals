@@ -12,7 +12,7 @@ import FractalSettings
 
 #ifdef __GUI_APP
 import Window as Win
-#endif
+ #endif
 
 
 colours = [(255,0,0),(0,255,255),(0,255,0)]
@@ -124,11 +124,13 @@ applyParameterShift fs frame = newfs
 psIterations :: ParameterModify
 psIterations (Param renderSettings rootCols iters epsilon) (up,down) step = newParam
     where newParam = Param renderSettings rootCols (step + (round down)) epsilon
+psEpsilon :: ParameterModify
+psEpsilon (Param renderSettings rootCols iters epsilon) (up,down) step = newParam
+    where newParam = Param renderSettings rootCols iters (down + ((fromIntegral step) * epsilon))
 ---------------------------------------------------------------------------- Impure Part
 --doAnimate :: Int -> Complex Double -> Double -> IO ()
 --doAnimate n (a:+b) z = mapM_ (animateF (a:+b) z) [1..n]
-testSettings2 = FS (2000,2000) ((1,-1),(1,-1)) (Param (Cutoff 20 0.000001) rootcolours 20 0.000001) (ParameterShift (psIterations) (0,1) 3)
-
+testSettings2 = FS (2000,2000) ((1,-1),(1,-1)) (Param (Cutoff 20 0.000001) rootcolours 20 0.000001) (ParameterShift (psEpsilon) (0.0001,1) 1)
 #ifdef __GUI_APP
 main = do
     win <- Win.create
@@ -137,15 +139,15 @@ main = do
 #else
 main = do
        getNumCapabilities >>= setNumCapabilities
-       putStrLn "Frames number:"
-       nm <- getLine
+       putStrLn "Test Mode, generating Test Fractal"
+       --nm <- getLine
        --fs <- inputFS
-       let n = validateI nm
+      -- let n = validateI nm
+       let n = 10
        let fs = testSettings2
        if n <= 1 then
          write (mandelbrotFunc) (mandelbrotFunc') fs (filename ++ ".bmp")
        else
          mapM_ (simAnimate fs (mandelbrotFunc) (mandelbrotFunc')) [0..n]
-       main
        --(simAnimate testSettings (Zoom (0:+0) 2) (mandelbrotFunc) (mandelbrotFunc')) [0..10]
 #endif
