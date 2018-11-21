@@ -131,7 +131,7 @@ testSettings2 = FS (2000,2000) ((1,-1),(1,-1)) (Param (Cutoff 20 0.000001) rootc
 
 #ifdef __GUI_APP
 main = do
-    win <- Win.create
+    win <- Win.create $ generateImage mandelbrotFunc mandelbrotFunc'
     return (0)
 
 #else
