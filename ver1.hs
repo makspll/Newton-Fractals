@@ -12,7 +12,7 @@ import FractalSettings
 
 #ifdef __GUI_APP
 import Window as Win
- #endif
+#endif
 
 
 colours = [(255,0,0),(0,255,255),(0,255,0)]
@@ -131,12 +131,15 @@ psEpsilon (Param renderSettings rootCols iters epsilon) (up,down) step = newPara
 --doAnimate :: Int -> Complex Double -> Double -> IO ()
 --doAnimate n (a:+b) z = mapM_ (animateF (a:+b) z) [1..n]
 testSettings2 = FS (2000,2000) ((1,-1),(1,-1)) (Param (Cutoff 20 0.000001) rootcolours 20 0.000001) (ParameterShift (psEpsilon) (0.0001,1) 1)
+
 #ifdef __GUI_APP
+
 main = do
     win <- Win.create $ generateImage mandelbrotFunc mandelbrotFunc'
     return (0)
 
 #else
+
 main = do
        getNumCapabilities >>= setNumCapabilities
        putStrLn "Test Mode, generating Test Fractal"

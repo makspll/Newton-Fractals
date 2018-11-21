@@ -106,7 +106,8 @@ colourMode = "DistanceR"
 
 createFsFromWidgets :: (Entry, Entry) -> (Entry, Entry) -> Entry -> Entry -> [RadioButton] -> IO FractalSettings
 createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs = do
-    mapM_ (formatField False False) [xMinW , xMaxW, yMinW, yMaxW, epsW, iteW]
+    mapM_ (formatField False False) [xMinW , xMaxW, yMinW, yMaxW, epsW]
+    formatField True False iteW
     xMinText <- (entryGetText xMinW) :: IO String ;  let xMin = read xMinText :: Double
     xMaxText <- (entryGetText xMaxW) :: IO String ;  let xMax = read xMaxText :: Double
     yMinText <- (entryGetText yMinW) :: IO String ;  let yMin = read xMinText :: Double
@@ -114,8 +115,30 @@ createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs = do
     epsText  <- (entryGetText epsW)  :: IO String ;  let eps  = read epsText  :: Double
     iteText  <- (entryGetText iteW)  :: IO String ;  let ite  = read iteText  :: Int
     
-    let testSettings2 = FS (imageDimX,imageDimY) ((xMax,xMin),(yMax,yMin)) (Param (Cutoff ite eps) rootcolours 20 0.000001) (None)
+    let testSettings2 = FS (imageDimX,imageDimY) ((xMax,xMin),(yMax,yMin)) (Param (Cutoff ite eps) rootcolours (if ite > 20 then ite else 20) eps) (None)
     return testSettings2
+
+startAnimation fs state = do
+    (aid, frame, fsToBmp, image) <- readIORef state 
+    let naid = aid + 1
+    writeIORef state (naid, frame, fsToBmp, image)
+    timeoutAdd (animate naid state) 1000
+    where 
+        animate aid state = do
+            (caid, cframe, fsToBmp, image) <- readIORef state
+            putStr (show caid)
+            if caid /= aid then return False
+            else do
+                let bmp = fsToBmp fs
+                imgPtr <- newArray (map CUChar (BS.unpack bmp))
+                pixbuf <- pixbufNewFromData imgPtr 
+                                            ColorspaceRgb
+                                            True 8 
+                                            imageDimX imageDimY 
+                                            (imageDimX * 4)
+                imageSetFromPixbuf image pixbuf
+                return True
+            
 
 create :: (FractalSettings -> BS.ByteString) -> IO Window
 create fsToBmp = do
@@ -153,15 +176,16 @@ create fsToBmp = do
     image <- imageNewFromPixbuf pixbuf 
     tableAttach grid image 5 6 0 6 [Fill] [Fill] 2 2
 
+    state <- (newIORef (0, 0, fsToBmp, image))
+
     renderButton <- createButton "Do The *MAGIC*" >>= attach grid 0 5 5 1
     on renderButton buttonActivated $ do
         fs <- createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r1,r2]
-        let bmp = fsToBmp fs
-        imgPtr <- newArray (map CUChar (BS.unpack bmp))
-        pixbuf <- pixbufNewFromData imgPtr ColorspaceRgb True 8 imageDimX imageDimY (imageDimX * 4)
-        imageSetFromPixbuf image pixbuf
+        startAnimation fs state
+        return ()
     containerAdd win grid
     widgetShowAll win
+
     mainGUI
     return win
     where
