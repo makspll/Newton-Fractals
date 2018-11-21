@@ -2,6 +2,7 @@ install
 
 cabal install BMP
 cabal install Control
+cabal install bytestring-strict-builder
 
 
 cabal install gtk

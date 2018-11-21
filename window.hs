@@ -8,6 +8,15 @@ import Control.Monad.IO.Class
 import Data.IORef
 import Graphics.UI.Gtk 
 import Data.List
+import Data.Complex
+import qualified Data.ByteString as BS
+import Foreign.Marshal.Array ( newArray ) 
+import Foreign.C.Types
+
+import FractalSettings
+
+imageDimX = 200
+imageDimY = 200
 
 createWindow :: IO Window
 createWindow = do
@@ -31,8 +40,8 @@ createLabel :: String -> IO Label
 createLabel str = 
     labelNew (Just str)
 
-do_theShit :: Entry -> Int -> String -> Int -> IO ()
-do_theShit field i s j = do
+formatField :: Entry -> Int -> String -> Int -> IO ()
+formatField field i s j = do
     str <- entryGetText field :: IO String
     let str1 = filter (\c -> c `elem` ['0'..'9'] || c == '.') str
     let c = length $ filter (=='.') str1
@@ -54,7 +63,7 @@ createTextField str = do
                 , entryText := str
                 , entryXalign := 1 ]
     buffer <- entryGetBuffer field
-    on buffer entryBufferInsertedText (do_theShit field)
+    on buffer entryBufferInsertedText (formatField field)
     return field
 
 createButton :: String -> IO Button
@@ -64,57 +73,82 @@ createButton str = do
     return button
 
 
-create = do
+colours = [(255,0,0),(0,255,255),(0,255,0)]
+roots = [(1:+0),((-0.5):+sqrt(3)/2),((-0.5):+((-sqrt(3))/2))]
+rootcolours = zip roots colours
+filename = "fractal"
+
+fractalMaxMinX = (1,-1)
+fractalMaxMinY = (1,-1)
+imageSize = (2000,2000)
+iterations = 30 :: Int
+shadingMaxIter = 30
+epsilon = 0.000001
+rootColorThreshold = 0.000001
+colourMode = "DistanceR"
+
+createFsFromWidgets :: (Entry, Entry) -> (Entry, Entry) -> Entry -> Entry -> [RadioButton] -> IO FractalSettings
+createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs = do
+    xMinText <- (entryGetText xMinW) :: IO String ;  let xMin = read xMinText :: Double
+    xMaxText <- (entryGetText xMaxW) :: IO String ;  let xMax = read xMaxText :: Double
+    yMinText <- (entryGetText yMinW) :: IO String ;  let yMin = read xMinText :: Double
+    yMaxText <- (entryGetText yMaxW) :: IO String ;  let yMax = read xMaxText :: Double
+    epsText  <- (entryGetText epsW)  :: IO String ;  let eps  = read epsText  :: Double
+    iteText  <- (entryGetText iteW)  :: IO String ;  let ite  = read iteText  :: Int
+    
+    let testSettings2 = FS (imageDimX,imageDimY) ((xMax,xMin),(yMax,yMin)) (Param (Cutoff ite eps) rootcolours 20 0.000001) (None)
+    return testSettings2
+
+create :: (FractalSettings -> BS.ByteString) -> IO Window
+create fsToBmp = do
     void initGUI 
 
     win <- createWindow 
 
     grid <- tableNew 5 5 False
 
-    -- image dimensions (Int , Int)
-
-    let imageDimensions = (100,100)
-
     -- image fractalboundries ((Double, Double),(Double, Double))
     
     createLabel "X boundries" >>= attach grid 0 1 1 1
-    createTextField "0.0" >>= attach grid 1 1 1 1
-    createTextField "1.0" >>= attach grid 2 1 1 1
+    xMinW <- createTextField "-1.0" >>= attach grid 1 1 1 1
+    xMaxW <- createTextField "1.0" >>= attach grid 2 1 1 1
     
     createLabel "Y boundries" >>= attach grid  0 2 1 1
-    createTextField "0.0" >>= attach grid 1 2 1 1
-    createTextField "1.0" >>= attach grid 2 2 1 1 
+    yMinW <- createTextField "-1.0" >>= attach grid 1 2 1 1
+    yMaxW <- createTextField "1.0" >>= attach grid 2 2 1 1 
 
     -- render parameters (Render, rootcolours, Int - iteracje, Double -distance / cutoff)
     createLabel "Epsilon" >>= attach grid 0 3 1 1
-    createTextField "0.0001" >>= attach grid 1 3 1 1
+    epsW <- createTextField "0.000001" >>= attach grid 1 3 1 1
     createLabel "Iterations" >>= attach grid 2 3 1 1
-    createTextField "20" >>= attach grid 3 3 1 1 
+    iteW <- createTextField "20" >>= attach grid 3 3 1 1 
     
     createLabel "Drawing method" >>= attach grid 0 4 1 1
-    r1 <- createRadioButton "Normal"
-    r2 <- createRadioButton "420"
+    r1 <- createRadioButton "Normal" >>= attach grid 1 4 1 1
+    r2 <- createRadioButton "420" >>= attach grid 3 4 1 1
     radioButtonSetGroup r1 r2
-    attach grid 1 4 1 1 r1
-    attach grid 3 4 1 1 r2
-
-    
-    -- animation type
-
-    createButton "Do The *MAGIC*" >>= attach grid 0 5 5 1
 
     -- drawing
 
-    pixbuf <- pixbufNew ColorspaceRgb True 8 100 100
+    pixbuf <- pixbufNew ColorspaceRgb True 8 imageDimX imageDimY 
     pixbufFill pixbuf 255 255 255 255
     image <- imageNewFromPixbuf pixbuf 
     attach grid 5 0 1 5 image
 
+    renderButton <- createButton "Do The *MAGIC*" >>= attach grid 0 5 5 1
+    on renderButton buttonActivated $ do
+        fs <- createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r1,r2]
+        let bmp = fsToBmp fs
+        imgPtr <- newArray (map CUChar (BS.unpack bmp))
+        pixbuf <- pixbufNewFromData imgPtr ColorspaceRgb True 8 imageDimX imageDimY (imageDimX * 4)
+        imageSetFromPixbuf image pixbuf
     containerAdd win grid
     widgetShowAll win
     mainGUI
     return win
     where
-        attach pare x y w h chil = tableAttach pare chil x (x+w) y (y+h) [Fill] [Fill] 5 5
+        attach pare x y w h chil = do
+            tableAttach pare chil x (x+w) y (y+h) [Fill] [Fill] 5 5
+            return chil
 
 
