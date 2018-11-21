@@ -131,15 +131,17 @@ psRootCols (Param constRenderSettings constRootCols constInterpolates constIters
           greenInterpolate = constInterpolates !! 2
 
 ---------------------------------------------------------------------------- Impure Part
---doAnimate :: Int -> Complex Double -> Double -> IO ()
---doAnimate n (a:+b) z = mapM_ (animateF (a:+b) z) [1..n]
+doAnimate :: Int -> Complex Double -> Double -> IO ()
+doAnimate n (a:+b) z = mapM_ (animateF (a:+b) z) [1..n]
 testSettings2 = fsCreate (500,500) ((1,-1),(1,-1)) (Cutoff 20 0.01) rootcolours 20 0.000001 [(ParameterShift [psIterations] [1,1]),(Zoom (0:+0) 2.2)]
 #ifdef __GUI_APP
+
 main = do
     win <- Win.create $ generateImage mandelbrotFunc mandelbrotFunc'
     return (0)
 
 #else
+
 main = do
        getNumCapabilities >>= setNumCapabilities
        putStrLn "Test Mode, generating Test Fractal"

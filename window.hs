@@ -119,7 +119,7 @@ createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs = do
     return testSettings2
 
 startAnimation fs state = do
-    (aid, frame, fsToBmp, image) <- readIORef state
+    (aid, frame, fsToBmp, image) <- readIORef state 
     let naid = aid + 1
     writeIORef state (naid, frame, fsToBmp, image)
     timeoutAdd (animate naid state) 1000
