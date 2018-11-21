@@ -15,14 +15,14 @@ import Foreign.C.Types
 
 import FractalSettings
 
-imageDimX = 200
-imageDimY = 200
+imageDimX = 150
+imageDimY = imageDimX
 
 createWindow :: IO Window
 createWindow = do
     win <- windowNew
     set win [ windowTitle           := "Kickass fractals"
-            , windowResizable       := True
+            , windowResizable       := False
             , windowDefaultWidth    := 1000
             , windowDefaultHeight   := 500 ]
 
@@ -40,31 +40,48 @@ createLabel :: String -> IO Label
 createLabel str = 
     labelNew (Just str)
 
-formatField :: Entry -> Int -> String -> Int -> IO ()
-formatField field i s j = do
+-- Do not ever assume user input
+-- input should be int
+-- input is currently selected
+formatField :: Bool -> Bool -> Entry -> IO ()
+formatField isInt isSelected field = do
     str <- entryGetText field :: IO String
-    let str1 = filter (\c -> c `elem` ['0'..'9'] || c == '.') str
+    let str1 = filter (\c -> c `elem` ['0'..'9'] || c `elem` ".-" ) str
     let c = length $ filter (=='.') str1
-    let str2 = removeDots False str1
-    entrySetText field str2
-    putStr str1
+    let str2 = (removeMinuses False) $ removeDots isInt str1
+    let str3 = if isSelected then str2 else fillZero str2
+    entrySetText field str3
     where
+        fillZero [] = []
+        fillZero (c:str) | c == '-' = c : fillZero str
+                         | c == '.' = '0' : c : str
+                         | otherwise = c:str
+        removeMinuses _ [] = []
+        removeMinuses False (c:str) = c : removeMinuses True str
+        removeMinuses True (c:str) | c == '-' = removeMinuses True str
+                                   | otherwise = c : removeMinuses True str
         removeDots _ [] = []
         removeDots False (c:str) | c == '.' = c : removeDots True str
                                  | otherwise = c : removeDots False str
         removeDots True (c:str) | c == '.' = removeDots True str
                                 | otherwise = c : removeDots True str
 
-createTextField :: String -> IO Entry
-createTextField str = do
+createDoubleEntryField = createNumberEntryField False 
+createIntEntryField = createNumberEntryField True
+
+createNumberEntryField :: Bool -> String -> IO Entry
+createNumberEntryField b str = do
     field <- entryNew
     set field   [ entryMaxLength := 10
                 , entryEditable := True
                 , entryText := str
                 , entryXalign := 1 ]
     buffer <- entryGetBuffer field
-    on buffer entryBufferInsertedText (formatField field)
+    on buffer entryBufferInsertedText (func field)
     return field
+    where
+        func :: Entry -> Int -> String -> Int -> IO()
+        func f x s y= formatField b True f
 
 createButton :: String -> IO Button
 createButton str = do
@@ -89,6 +106,7 @@ colourMode = "DistanceR"
 
 createFsFromWidgets :: (Entry, Entry) -> (Entry, Entry) -> Entry -> Entry -> [RadioButton] -> IO FractalSettings
 createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs = do
+    mapM_ (formatField False False) [xMinW , xMaxW, yMinW, yMaxW, epsW, iteW]
     xMinText <- (entryGetText xMinW) :: IO String ;  let xMin = read xMinText :: Double
     xMaxText <- (entryGetText xMaxW) :: IO String ;  let xMax = read xMaxText :: Double
     yMinText <- (entryGetText yMinW) :: IO String ;  let yMin = read xMinText :: Double
@@ -110,18 +128,18 @@ create fsToBmp = do
     -- image fractalboundries ((Double, Double),(Double, Double))
     
     createLabel "X boundries" >>= attach grid 0 1 1 1
-    xMinW <- createTextField "-1.0" >>= attach grid 1 1 1 1
-    xMaxW <- createTextField "1.0" >>= attach grid 2 1 1 1
+    xMinW <- createDoubleEntryField "-1.0" >>= attach grid 1 1 1 1
+    xMaxW <- createDoubleEntryField "1.0" >>= attach grid 2 1 1 1
     
     createLabel "Y boundries" >>= attach grid  0 2 1 1
-    yMinW <- createTextField "-1.0" >>= attach grid 1 2 1 1
-    yMaxW <- createTextField "1.0" >>= attach grid 2 2 1 1 
+    yMinW <- createDoubleEntryField "-1.0" >>= attach grid 1 2 1 1
+    yMaxW <- createDoubleEntryField "1.0" >>= attach grid 2 2 1 1 
 
     -- render parameters (Render, rootcolours, Int - iteracje, Double -distance / cutoff)
     createLabel "Epsilon" >>= attach grid 0 3 1 1
-    epsW <- createTextField "0.000001" >>= attach grid 1 3 1 1
+    epsW <- createDoubleEntryField "0.000001" >>= attach grid 1 3 1 1
     createLabel "Iterations" >>= attach grid 2 3 1 1
-    iteW <- createTextField "20" >>= attach grid 3 3 1 1 
+    iteW <- createIntEntryField "20" >>= attach grid 3 3 1 1 
     
     createLabel "Drawing method" >>= attach grid 0 4 1 1
     r1 <- createRadioButton "Normal" >>= attach grid 1 4 1 1
@@ -133,7 +151,7 @@ create fsToBmp = do
     pixbuf <- pixbufNew ColorspaceRgb True 8 imageDimX imageDimY 
     pixbufFill pixbuf 255 255 255 255
     image <- imageNewFromPixbuf pixbuf 
-    attach grid 5 0 1 5 image
+    tableAttach grid image 5 6 0 6 [Fill] [Fill] 2 2
 
     renderButton <- createButton "Do The *MAGIC*" >>= attach grid 0 5 5 1
     on renderButton buttonActivated $ do
@@ -148,7 +166,7 @@ create fsToBmp = do
     return win
     where
         attach pare x y w h chil = do
-            tableAttach pare chil x (x+w) y (y+h) [Fill] [Fill] 5 5
+            tableAttach pare chil x (x+w) y (y+h) [Fill] [Fill] 0 0
             return chil
 
 
