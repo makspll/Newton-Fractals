@@ -1,10 +1,12 @@
-module Utilities (mapTuple,mapTuple3,clamp,scaleToComplex,scaleComplex,scaleVar)
+module Utilities (mapTuple,mapTuple3,clamp,scaleToComplex,scaleComplex,scaleVar, clampLoopedRGB,clampRGB)
 where
 import Data.Complex
+import FractalSettings
+import Data.List
 mapTuple :: (Num a) => (a,a) -> (a -> a) -> (a,a)
 mapTuple (a,b) f = (f a,f b)
 
-mapTuple3 :: (Num a) => (a,a,a) -> (a -> a) -> (a,a,a)
+mapTuple3 :: (Num a) => (a,a,a) -> (a -> b) -> (b,b,b)
 mapTuple3 (a,b,c) f = (f a,f b,f c)
 
 clamp :: (Ord a) => a -> (a,a) -> a
@@ -25,3 +27,11 @@ scaleComplex (x:+y) (mX,miX) (mY,miY) (scaledMaxX,scaledMinX) (scaledMaxY,scaled
 scaleVar :: (Fractional a)=> a -> (a,a) -> (a,a) -> a
 scaleVar x (maxX,minX) (newXMax,newXMin) = newXMin + (((newXMax - newXMin) * (cX - minX)) / (maxX - minX))
     where cX  = x--clamp x (maxX,minX)
+
+clampLoopedRGB ::(Num a, Integral a)=> (a,a,a) -> (ColorW8)
+clampLoopedRGB (r,g,b) = mapTuple3 ((r,g,b)) (\x -> fromIntegral $ newX x)
+  where newX x = x `mod` 256
+
+clampRGB ::(Num a, Integral a )=> (a,a,a) -> (ColorW8)
+clampRGB (r,g,b) = mapTuple3 ((r,g,b)) (\x -> fromIntegral $ newX x)
+  where newX x = clamp x (255,0)

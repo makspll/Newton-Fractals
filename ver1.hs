@@ -12,23 +12,13 @@ import FractalSettings
 
 #ifdef __GUI_APP
 import Window as Win
- #endif
+#endif
 
 
 colours = [(255,0,0),(0,255,255),(0,255,0)]
 roots = [(1:+0),((-0.5):+sqrt(3)/2),((-0.5):+((-sqrt(3))/2))]
 rootcolours = zip roots colours
-testSettings = FS (2000,2000) ((1,-1),(1,-1)) (Param (DistanceR 20) rootcolours 20 0.000001)
 filename = "fractal"
-
-fractalMaxMinX = (1,-1)
-fractalMaxMinY = (1,-1)
-imageSize = (2000,2000)
-iterations = 30 :: Int
-shadingMaxIter = 30
-epsilon = 0.000001
-rootColorThreshold = 0.000001
-colourMode = "DistanceR"
 
 -------------------------------------------------------------------------Generator
 
@@ -83,8 +73,8 @@ inputFS =do
                                              putStrLn "Colour Cutoff Threshold (= epsilon for normal fractal)"
                                              colEm <- getLine
                                              let colE = validateF colEm
-                                             return $ fsCreate (w,h) ((mxX,mnX),(mxY,mnY)) (Param (Cutoff colIte colE) rootcolours iter eps) (Zoom (x:+y) zf)
-                                    (_) -> return $ fsCreate (w,h) ((mxX,mnX),(mxY,mnY)) (Param (DistanceR colIte) rootcolours iter eps) (Zoom (x:+y) zf)
+                                             return $ fsCreate (w,h) ((mxX,mnX),(mxY,mnY))  (Cutoff colIte colE) rootcolours iter eps [(Zoom (x:+y) zf)]
+                                    (_) -> return $ fsCreate (w,h) ((mxX,mnX),(mxY,mnY)) (DistanceR colIte) rootcolours iter eps [(Zoom (x:+y) zf)]
           fracSettings
 
 validateF :: String -> Double
@@ -99,38 +89,51 @@ write f f' fs filename =  writeBMP filename bmp >> putStrLn ("Saved:" ++ filenam
   where rgba = generateImage f f' fs
         bmp = packRGBA32ToBMP (fsWid fs) (fsHei fs) (rgba)
 
-simAnimate :: FractalSettings -> ComplexFunction -> ComplexFunction -> Int -> IO ()
-simAnimate fs f f' frame = write f f' nextfs (filename ++ "-" ++ (show frame) ++ ".bmp")
-    where nextfs = case fsAnimType fs of
-                    rs@(Zoom c z) -> zoomToRoot c z fs frame
-                    (ParameterShift f ud s) -> applyParameterShift fs frame
-                    (None)       -> fs
+simAnimate :: ComplexFunction -> ComplexFunction -> FractalSettings -> Int -> IO ()
+simAnimate f f' fs frame = write f f' nextfs (filename ++ "-" ++ (show frame) ++ ".bmp")
+    where nextfs = foldr(\animI newfs ->case animI of
+                                          rs@(Zoom c z) -> zoomToRoot c z newfs frame
+                                          (ParameterShift funcs steps) -> applyParameterShift funcs steps newfs frame
+                                          (None)       -> newfs                                  ) fs (fsAnimType fs)
 
 
 zoomToRoot :: Complex Double -> Double -> FractalSettings -> Int -> FractalSettings
 zoomToRoot _ _ fs 0 = fs
-zoomToRoot (a:+b) zoomFactor fs frame = fsCreate (fsDim fs) ((a + deltaX,a - deltaX),(b + deltaY, b - deltaY)) (fsParams fs) (fsAnimType fs)
+zoomToRoot (a:+b) zoomFactor fs frame = FS (fsDim fs) ((a + deltaX,a - deltaX),(b + deltaY, b - deltaY)) (fsParams fs) (fsAnimType fs)
   where curDim = (abs (fsXBound1 fs - fsXBound2 fs),abs (fsYBound1 fs - fsYBound2 fs))
         newDimension = mapTuple (curDim) (*(1/(zoomFactor * fromIntegral frame))) --frames start at 1
         deltaX = (fst newDimension) /2
         deltaY = (snd newDimension) /2
-applyParameterShift :: FractalSettings -> Int -> FractalSettings
-applyParameterShift fs frame = newfs
+
+applyParameterShift :: [ParameterModify] -> [Double] -> FractalSettings -> Int -> FractalSettings
+applyParameterShift funcs steps fs frame = newfs
   where
     newfs = do
-            let (ParameterShift f (up,down) step) = fsAnimType fs
-            (fsCreate (fsDim fs) (fsBound fs) (f (fsParams fs) (up,down) (step*frame)) (fsAnimType fs))
+            let fsSteps = zip funcs steps
+            (FS (fsDim fs) (fsBound fs) ( foldr (\(f,s) params -> f params (s*(fromIntegral frame))) (fsParams fs) fsSteps ) (fsAnimType fs)) -- only thing that is different each run is frame count, fs always is the original fractal setting
 ---Parameter Shifters
 psIterations :: ParameterModify
-psIterations (Param renderSettings rootCols iters epsilon) (up,down) step = newParam
-    where newParam = Param renderSettings rootCols (step + (round down)) epsilon
+psIterations (Param constRenderSettings constRootCols constInterpolates constIters constEpsilon) currentDelta = newParam
+    where newParam = Param constRenderSettings constRootCols constInterpolates (floor $ currentDelta + (fromIntegral constIters)) constEpsilon
 psEpsilon :: ParameterModify
-psEpsilon (Param renderSettings rootCols iters epsilon) (up,down) step = newParam
-    where newParam = Param renderSettings rootCols iters (down + ((fromIntegral step) * epsilon))
+psEpsilon (Param constRenderSettings constRootCols constInterpolates constIters constEpsilon) currentDelta = newParam
+    where newParam = Param constRenderSettings constRootCols constInterpolates constIters (currentDelta + constEpsilon)
+
+psRootCols :: ParameterModify
+psRootCols (Param constRenderSettings constRootCols constInterpolates constIters constEpsilon) currentDelta = newParam
+    where newParam = Param constRenderSettings (newRootCols) constInterpolates constIters constEpsilon
+          newRootCols = zipWith (\x y -> x y) test [0..(length constRootCols -1)]
+          test = map (\x -> (newRootCol x)) constRootCols :: [Int -> (Complex Double,ColorW8)]
+          newRootCol (rt,(r,g,b)) i = (rt,(clampRGB (redInterpolate $ interpolXAtChannel i,greenInterpolate $ interpolXAtChannel i,blueInterpolate $ interpolXAtChannel i))) :: (Complex Double,ColorW8) -- interpolXAtChannel g,  interpolXAtChannel  b
+          interpolXAtChannel i = ((round(currentDelta)) + ((i * (255 `div`(length constRootCols)))))`mod`256 :: Int
+          redInterpolate = constInterpolates !! 0
+          blueInterpolate = constInterpolates !! 1
+          greenInterpolate = constInterpolates !! 2
+
 ---------------------------------------------------------------------------- Impure Part
 --doAnimate :: Int -> Complex Double -> Double -> IO ()
 --doAnimate n (a:+b) z = mapM_ (animateF (a:+b) z) [1..n]
-testSettings2 = FS (2000,2000) ((1,-1),(1,-1)) (Param (Cutoff 20 0.000001) rootcolours 20 0.000001) (ParameterShift (psEpsilon) (0.0001,1) 1)
+testSettings2 = fsCreate (500,500) ((1,-1),(1,-1)) (Cutoff 20 0.01) rootcolours 20 0.000001 [(ParameterShift [psIterations] [1,1]),(Zoom (0:+0) 2.2)]
 #ifdef __GUI_APP
 main = do
     win <- Win.create $ generateImage mandelbrotFunc mandelbrotFunc'
@@ -143,11 +146,11 @@ main = do
        --nm <- getLine
        --fs <- inputFS
       -- let n = validateI nm
-       let n = 10
+       let n = 340
        let fs = testSettings2
        if n <= 1 then
          write (mandelbrotFunc) (mandelbrotFunc') fs (filename ++ ".bmp")
        else
-         mapM_ (simAnimate fs (mandelbrotFunc) (mandelbrotFunc')) [0..n]
+         mapM_ (simAnimate (mandelbrotFunc) (mandelbrotFunc') fs ) [0..n]
        --(simAnimate testSettings (Zoom (0:+0) 2) (mandelbrotFunc) (mandelbrotFunc')) [0..10]
 #endif
