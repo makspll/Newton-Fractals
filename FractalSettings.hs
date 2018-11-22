@@ -3,6 +3,7 @@ module FractalSettings (FractalSettings(..),
                         Parameters(..),
                         RenderSettings(..),
                         fsCreate,
+                        fsGenerate,
                         fsDim,
                         fsHei,
                         fsWid,
@@ -48,8 +49,47 @@ data AnimationType = Zoom (Complex Double) Double      |
                      None
 data FractalSettings = FS (ComplexFunction,ComplexFunction) ImageDimensions FractalBoundaries Parameters [AnimationType]
 
+colours = [(255,0,0),(0,255,255),(0,255,0),(255,165,0),(128,0,128),(255,255,0)] :: [ColorW8]
+mandelbrotFunc z = (z*z*z) - (1:+0)
+mandelbrotFunc' z = (z*z) * (3:+0)
+mabr = (mandelbrotFunc,mandelbrotFunc')
+mbRoots = [(1:+0),((-0.5):+sqrt(3)/2),((-0.5):+((-sqrt(3))/2))]
+mbRC = zip mbRoots colours
+
+cyclicFunc z= (900*(z^3)) - (2595*(z^2)) + (658*z) - 902
+cyclicFunc' z= (2700*(z^2)) - ((5190*z)+658)
+cycc = (cyclicFunc,cyclicFunc')
+cRoots = [(11/4:+0),(1/15:+(-3/5)),(1/15:+3/5)]
+cRC = zip cRoots colours
+
+tworepFunc z = ((z-1)^2) *(z+1)
+tworepFunc' z = (z-1)*((3*z)+1)
+twre = (tworepFunc,tworepFunc')
+twRoots = [((-1):+0),(1:+0),(1:+0)]
+twRC = zip twRoots colours
+
+fiverealFunc z = (z+2)*(z+1)*z*(z-1)*(z-2)
+fiverealFunc' z = (5*(z^4))-(15*(z^2)) +4
+fire = (fiverealFunc,fiverealFunc')
+frRoots = [((-2):+0),((-1):+0),(0:+0),(1:+0),(2:+0)]
+frRC = zip frRoots colours
+
 fsCreate :: (ComplexFunction ,ComplexFunction) -> ImageDimensions -> FractalBoundaries -> RenderSettings -> RootCols -> Int -> Double -> [AnimationType] -> FractalSettings
 fsCreate (f,f') imgDim fracBound renderSettings rootCols maxIters eps animType = FS (f,f') imgDim fracBound (fsCreateParams renderSettings rootCols maxIters eps) animType
+
+fsGenerate :: Int -> ImageDimensions -> FractalBoundaries -> RenderSettings -> Int -> Double -> [AnimationType] -> FractalSettings
+fsGenerate enum imgDim fracBound renderSettings iters eps animType = 
+    let 
+        (funcPair, rootColrs) = unenum enum
+    in
+        fsCreate funcPair imgDim fracBound renderSettings rootColrs iters eps animType
+    where
+        unenum i | i == 0 = (mabr, mbRC)
+                 | i == 1 = (cycc, cRC)
+                 | i == 2 = (twre, twRC)
+                 | i == 3 = (fire, frRC)
+                 | otherwise = (mabr, mbRC)
+
 fsCreateParams :: RenderSettings -> RootCols -> Int -> Double -> Parameters
 fsCreateParams renderSettings rootCols maxIters eps = Param renderSettings rootCols (generateInterpolates rootCols) maxIters eps
 
