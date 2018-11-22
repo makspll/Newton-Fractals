@@ -1,4 +1,4 @@
-
+{-# LANGUAGE UnicodeSyntax #-}
 import Control.Concurrent
 import NewtonianMethod
 import IOinput
@@ -32,19 +32,20 @@ main = do
        putStrLn "Maks & Michal 2k18 >>= with love >> we present you with..."
        putStrLn "----------------------------------------------------------"
        putStrLn "  __                _        _     _     _ _  _ _ _ _ _   "
-       putStrLn " / _|              | |      | |    \ \  |  _||  _|_   _|  "
-       putStrLn "| |_ _ __ __ _  ___| |_ __ _| |     \ \ | |_ | |_  | |    "
-       putStrLn "|  _| '__/ _` |/ __| __/ _` | |     /\ \|  _||  _| | |    "
-       putStrLn "| | | | | (_| | (__| || (_| | |    / /\ \ |_ | |_  | |    "
-       putStrLn "|_| |_|  \__,_|\___|\__\__,_|_|   /_/  \_\__||___| |_|    "
+       putStrLn " / _|              | |      | |    ! !  |  _||  _|_   _|  "
+       putStrLn "| |_ _ __ __ _  ___| |_ __ _| |     ! ! | |_ | |_  | |    "
+       putStrLn "|  _| '__/ _` |/ __| __/ _` | |     /! !|  _||  _| | |    "
+       putStrLn "| | | | | (_| | (__| || (_| | |    / /! ! |_ | |_  | |    "
+       putStrLn "|_| |_|  !__,_|!___|!__!__,_|_|   /_/  !_!__||___| |_|    "
        putStrLn "----------------------------------------------------------"
        putStrLn "   the ultimate newton method fractal yeeting software ©  "
        putStrLn "----------------------------------------------------------"
        putStrLn "To begin the ultimate yeet experience, enter no.of frames:"
        n <- getLine
+       let nV = read n
        fs <- getFS
-       if n <= 1 then
+       if nV <= 1 then
          write fs ("fractal" ++ ".bmp")
        else
-         mapM_ (simAnimate fs ) [0..n]
+         mapM_ (simAnimate fs ) [0..nV]
 #endif
