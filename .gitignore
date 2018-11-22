@@ -2,6 +2,8 @@
 prog
 *.exe
 
+*.bmp
+
 # debbugging data
 Debugging/*
 Debugging

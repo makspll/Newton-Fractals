@@ -46,10 +46,10 @@ formatField :: Bool -> Bool -> Entry -> IO ()
 formatField isInt isSelected field = do
     str <- entryGetText field :: IO String
     let str1 = filter (\c -> c `elem` ['0'..'9'] || c `elem` ".-" ) str
-    let c = length $ filter (=='.') str1
     let str2 = (removeMinuses False) $ removeDots isInt str1
-    let str3 = if isSelected then str2 else fillZero str2
-    entrySetText field str3
+    let str3 = if isSelected then str2 else (fillZero.removeHeadZeros) str2
+    let str4 = if (not isSelected) && isInt then absolulify str3 else str3
+    entrySetText field str4
     where
         fillZero [] = []
         fillZero (c:str) | c == '-' = c : fillZero str
@@ -64,6 +64,13 @@ formatField isInt isSelected field = do
                                  | otherwise = c : removeDots False str
         removeDots True (c:str) | c == '.' = removeDots True str
                                 | otherwise = c : removeDots True str
+        removeHeadZeros [] = []
+        removeHeadZeros (c:str) | c == '0' = removeHeadZeros str
+                                | c == '-' = c : (removeHeadZeros str)
+                                | otherwise = (c:str)
+        absolulify [] = "1"
+        absolulify (c:str) | c == '-' = "1"
+                           | otherwise = (c:str)
 
 createDoubleEntryField = createNumberEntryField False
 createIntEntryField = createNumberEntryField True
