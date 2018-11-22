@@ -20,9 +20,11 @@ mapFractal f f' fs (bx,by) (fracW, fracH) (pixW, pixH) inters eps =  mconcat[mco
         fracXAtX x= (toD x*) $ fracW / (toD pixW)
         fracYAtY y= (toD y*) $ fracH / (toD pixH)
 
-generateImage :: ComplexFunction -> ComplexFunction -> FractalSettings -> BS.ByteString
-generateImage f f' fs =BSBS.builderBytes $ testf (nmOnBox) [(x,y) |x <- [0..(xBoxes-1)] , y <- [0..(yBoxes-1)]]
-  where nmOnBox (x,y) = mapFractal f f' fs (minfX + fracXAtX x ,minfY + fracYAtY y) (fTotalW / (toD xBoxes) , fTotalH / (toD yBoxes)) (pixTotalW `div` xBoxes , pixTotalH `div` yBoxes) inters eps
+generateImage :: FractalSettings -> BS.ByteString
+generateImage fs =BSBS.builderBytes $ testf (nmOnBox) [(x,y) |x <- [0..(xBoxes-1)] , y <- [0..(yBoxes-1)]]
+  where f = fsF fs
+        f' = fsF' fs
+        nmOnBox (x,y) = mapFractal f f' fs (minfX + fracXAtX x ,minfY + fracYAtY y) (fTotalW / (toD xBoxes) , fTotalH / (toD yBoxes)) (pixTotalW `div` xBoxes , pixTotalH `div` yBoxes) inters eps
         toD = fromIntegral
         (minfX, minfY, fTotalW,fTotalH) = (fsXBound2 fs, fsYBound2 fs,(fsXBound1 fs) - (fsXBound2 fs),(fsYBound1 fs - fsYBound2 fs))
         (pixTotalW,pixTotalH,inters,eps) =(fsWid fs, fsHei fs,fsIters fs,fsEpsilon fs)
