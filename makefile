@@ -1,4 +1,4 @@
-FILES = ver1.hs newton.hs 
+FILES = ver1.hs 
 
 EXEC = prog
 

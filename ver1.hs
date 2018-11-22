@@ -121,6 +121,15 @@ simAnimate fs frame = write nextfs (filename ++ "-" ++ (show frame) ++ ".bmp")
                                           (None)       -> newfs                                  ) fs (fsAnimType fs)
 
 
+generateImageWithFrame :: FractalSettings -> Int -> BS.ByteString
+generateImageWithFrame fs frame = generateImage nextfs
+    where     f = fsF fs
+              f' = fsF' fs
+              nextfs = foldr(\animI newfs ->case animI of
+                                          rs@(Zoom c z) -> zoomToRoot c z newfs frame
+                                          (ParameterShift funcs steps) -> applyParameterShift funcs steps newfs frame
+                                          (None)       -> newfs                                  ) fs (fsAnimType fs)
+
 zoomToRoot :: Complex Double -> Double -> FractalSettings -> Int -> FractalSettings
 zoomToRoot _ _ fs 0 = fs
 zoomToRoot (a:+b) zoomFactor fs frame = FS (fsFs fs) (fsDim fs) ((a + deltaX,a - deltaX),(b + deltaY, b - deltaY)) (fsParams fs) (fsAnimType fs)
@@ -161,7 +170,7 @@ testSettings2 = fsCreate fire defaultWindowSize defaultSlice (Cutoff 20 0.1) frR
 #ifdef __GUI_APP
 
 main = do
-    win <- Win.create $ generateImage
+    win <- Win.create $ generateImageWithFrame
     return (0)
 
 #else
