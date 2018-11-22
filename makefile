@@ -1,4 +1,4 @@
-FILES = ver1.hs 
+FILES = main.hs 
 
 EXEC = prog
 
