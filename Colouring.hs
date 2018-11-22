@@ -1,5 +1,7 @@
 module Colouring (applyColourFunc,colourWithDToR,colourWithCutOff,mixRGB)
+
 where
+
 import FractalSettings
 import Data.Complex
 import Data.Word
