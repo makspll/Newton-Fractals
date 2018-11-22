@@ -18,7 +18,7 @@ filename = "fractal"
 #ifdef __GUI_APP
 
 main = do
-    win <- Win.create $ generateImageWithFrame
+    win <- Win.create 
     return (0)
 
 #else

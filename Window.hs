@@ -5,15 +5,14 @@ where
 
 import Control.Monad
 import Control.Monad.IO.Class
-import Control.DeepSeq
 import Data.IORef
 import Graphics.UI.Gtk
-import Data.List
 import Data.Complex
 import qualified Data.ByteString as BS
 import Foreign.Marshal.Array ( newArray )
 import Foreign.C.Types
 
+import Rendering ( generateImageWithFrame )
 import FractalSettings
 
 imageDimX = 200
@@ -159,8 +158,9 @@ animate state image = do
     imageSetFromPixbuf image pixbuf
     return True
 
-create :: (FractalSettings -> Int -> BS.ByteString) -> IO Window
-create fsToBmp = do
+create :: IO Window
+create = do
+    let fsToBmp = generateImageWithFrame
     void initGUI
 
     win <- createWindow
@@ -209,9 +209,9 @@ create fsToBmp = do
     state <- (newIORef ([], 0, 0))
 
     renderButton <- createButton "Do The *MAGIC*" >>= attach grid 0 7 5 1
-    on renderButton buttonActivated (updateImage state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) (animateButton, framesNo) )
+    on renderButton buttonActivated (updateImage fsToBmp state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) (animateButton, framesNo) )
 
-    (updateImage state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) (animateButton, framesNo) )
+    updateImage fsToBmp state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) (animateButton, framesNo) 
 
     containerAdd win grid
     widgetShowAll win
@@ -224,7 +224,7 @@ create fsToBmp = do
         attach pare x y w h chil = do
             tableAttach pare chil x (x+w) y (y+h) [Fill] [Fill] 0 0
             return chil
-        updateImage state xs ys eps it rs zms ams = do
+        updateImage fsToBmp state xs ys eps it rs zms ams = do
             fs <- createFsFromWidgets xs ys eps it rs zms ams
             startAnimation fs state fsToBmp
             return ()

@@ -5,7 +5,6 @@ where
 
 import Data.Complex
 import Control.Parallel
-import Control.DeepSeq
 import Data.Word
 import FractalSettings
 import qualified ByteString.StrictBuilder as BSBS
