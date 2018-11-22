@@ -5,7 +5,7 @@ EXEC = prog
 FLAGS = --make -threaded
 DEBUG = -prof -fprof-auto +RTS -p -hy
 RELEASE = -O2
-WINDOW = -D__GUI_APP window.hs
+WINDOW = -D__GUI_APP # window.hs
 
 GHC = ghc
 
