@@ -52,6 +52,7 @@ applyParameterShift funcs steps fs frame = newfs
 psIterations :: ParameterModify
 psIterations (Param constRenderSettings constRootCols constInterpolates constIters constEpsilon) currentDelta = newParam
     where newParam = Param constRenderSettings constRootCols constInterpolates (floor $ currentDelta + (fromIntegral constIters)) constEpsilon
+
 psEpsilon :: ParameterModify
 psEpsilon (Param constRenderSettings constRootCols constInterpolates constIters constEpsilon) currentDelta = newParam
     where newParam = Param constRenderSettings constRootCols constInterpolates constIters (currentDelta + constEpsilon)
