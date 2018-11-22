@@ -22,6 +22,8 @@ module FractalSettings (FractalSettings(..),
                         fsF,
                         fsF',
                         fsFs,
+                        fsCreateDim,
+                        fsCreateBou,
                         XYInt,XYDouble,ColorW8,Pixel,RootCols,ComplexFunction,FractalBoundaries,ParameterModify,ImageDimensions)
 where
 
@@ -52,7 +54,10 @@ fsCreate :: (ComplexFunction ,ComplexFunction) -> ImageDimensions -> FractalBoun
 fsCreate (f,f') imgDim fracBound renderSettings rootCols maxIters eps animType = FS (f,f') imgDim fracBound (fsCreateParams renderSettings rootCols maxIters eps) animType
 fsCreateParams :: RenderSettings -> RootCols -> Int -> Double -> Parameters
 fsCreateParams renderSettings rootCols maxIters eps = Param renderSettings rootCols (generateInterpolates rootCols) maxIters eps
-
+fsCreateDim :: Int -> Int -> ImageDimensions
+fsCreateDim x y = (x,y)
+fsCreateBou :: Double -> Double -> Double -> Double -> (FractalBoundaries)
+fsCreateBou x x2 y y2 = ((x,x2),(y,y2))
 fsDim :: FractalSettings -> ImageDimensions
 fsDim (FS _ (d) _ _ _) = d
 fsHei :: FractalSettings -> Int
