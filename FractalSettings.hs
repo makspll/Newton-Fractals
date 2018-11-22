@@ -23,8 +23,12 @@ module FractalSettings (FractalSettings(..),
                         fsF,
                         fsF',
                         fsFs,
+                        fsCreateParams,
                         fsCreateDim,
                         fsCreateBou,
+                        fsCreateRenDist,
+                        fsCreateRenCutoff,
+                        getff',
                         XYInt,XYDouble,ColorW8,Pixel,RootCols,ComplexFunction,FractalBoundaries,ParameterModify,ImageDimensions)
 where
 
@@ -80,24 +84,28 @@ fsCreate :: (ComplexFunction ,ComplexFunction) -> ImageDimensions -> FractalBoun
 fsCreate (f,f') imgDim fracBound renderSettings rootCols maxIters eps animType = FS (f,f') imgDim fracBound (fsCreateParams renderSettings rootCols maxIters eps) animType
 
 fsGenerate :: Int -> ImageDimensions -> FractalBoundaries -> RenderSettings -> Int -> Double -> [AnimationType] -> FractalSettings
-fsGenerate enum imgDim fracBound renderSettings iters eps animType = 
-    let 
-        (funcPair, rootColrs) = unenum enum
+fsGenerate enum imgDim fracBound renderSettings iters eps animType =
+    let
+        (funcPair, rootColrs) = getff' enum
     in
         fsCreate funcPair imgDim fracBound renderSettings rootColrs iters eps animType
-    where
-        unenum i | i == 0 = (mabr, mbRC)
-                 | i == 1 = (cycc, cRC)
-                 | i == 2 = (twre, twRC)
-                 | i == 3 = (fire, frRC)
-                 | otherwise = (mabr, mbRC)
 
+getff' :: Int -> ((ComplexFunction,ComplexFunction),RootCols)
+getff' i | i == 0 = (mabr, mbRC)
+         | i == 1 = (cycc, cRC)
+         | i == 2 = (twre, twRC)
+         | i == 3 = (fire, frRC)
+         | otherwise = (mabr, mbRC)
 fsCreateParams :: RenderSettings -> RootCols -> Int -> Double -> Parameters
 fsCreateParams renderSettings rootCols maxIters eps = Param renderSettings rootCols (generateInterpolates rootCols) maxIters eps
 fsCreateDim :: Int -> Int -> ImageDimensions
 fsCreateDim x y = (x,y)
 fsCreateBou :: Double -> Double -> Double -> Double -> (FractalBoundaries)
 fsCreateBou x x2 y y2 = ((x,x2),(y,y2))
+fsCreateRenCutoff :: Int -> Double -> RenderSettings
+fsCreateRenCutoff shadingTop cutoff = Cutoff shadingTop cutoff
+fsCreateRenDist :: Int -> RenderSettings
+fsCreateRenDist shadingTop = DistanceR shadingTop
 fsDim :: FractalSettings -> ImageDimensions
 fsDim (FS _ (d) _ _ _) = d
 fsHei :: FractalSettings -> Int

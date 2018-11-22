@@ -49,62 +49,121 @@ frRC = zip frRoots colours
 --f maxIter threshold (width,height) fracMaxMinX fracMaxMinY colours
 
 -----------------------------------------------------------------------------User Input
-{-
+
 inputFS :: IO FractalSettings --testSettings = FS (2000,2000) ((1,-1),(1,-1)) (Param (DistanceR 30) rootcolours 20 0.000001)
-inputFS =do
-          putStrLn "Image Width"
-          wm <- getLine
-          let w = validateI wm
-          putStrLn "Image Height"
-          hm <- getLine
-          let h = validateI hm
-          putStrLn "Fractal Upper X"
-          mxXm <- getLine
-          let mxX = validateF mxXm
-          putStrLn "Fractal Lower X"
-          mnXm <- getLine
-          let mnX = validateF mnXm
-          putStrLn "Fractal Upper Y"
-          mxYm <- getLine
-          let mxY = validateF mxYm
-          putStrLn "Fractal Lower Y"
-          mnYm <- getLine
-          let mnY = validateF mnYm
-          putStrLn "Colour Mode Cutoff or Distance (1 or 2)"
-          mode <- getLine
-          putStrLn "Colour Iterations Upper Shader"
-          colItem <- getLine
-          let colIte = validateI colItem
-          putStrLn "Max iterations"
-          iterm <- getLine
-          let iter = validateI iterm
-          putStrLn "Epsilon"
-          epsm <- getLine
-          let eps = validateF epsm
-          putStrLn "x coordinate of zoom"
-          xm <- getLine
-          let x = validateF xm
-          putStrLn "y coordinate of zoom"
-          ym <- getLine
-          let y = validateF ym
-          putStrLn "Zoom per frame (>1 for zoom in)"
-          zfm <- getLine
-          let zf = validateF zfm
-          let fracSettings = case mode of
-                                    ("1") -> do
-                                             putStrLn "Colour Cutoff Threshold (= epsilon for normal fractal)"
-                                             colEm <- getLine
-                                             let colE = validateF colEm
-                                             return $ fsCreate mandelbrotFunc mandelbrotFunc' (w,h) ((mxX,mnX),(mxY,mnY))  (Cutoff colIte colE) mbRC iter eps [(Zoom (x:+y) zf)]
-                                    (_) -> return $ fsCreate mandelbrotFunc mandelbrotFunc' (w,h) ((mxX,mnX),(mxY,mnY)) (DistanceR colIte) mbRC iter eps [(Zoom (x:+y) zf)]
-          fracSettings
+inputFS = undefined
+--FS (ComplexFunction,ComplexFunction) ImageDimensions FractalBoundaries Parameters [AnimationType]
+inputDefaultFS :: IO (ComplexFunction,ComplexFunction)
+inputDefaultFS = undefined
 
 validateF :: String -> Double
 validateF x = fromMaybe (0.0) $readMaybe (x)
 
 validateI :: String -> Int
 validateI x = fromMaybe (0) $readMaybe (x)
--}
+getFS :: IO (FractalSettings)
+getFS =do
+       imgDims<- getImageDims
+       fracBound <- getBoundaries
+       (params,ff')<- getParametersPlusFf
+       animTypes <- getAnims
+       return $ FS ff' imgDims fracBound params animTypes
+getImageDims :: IO (ImageDimensions)
+getImageDims = do
+               putStrLn "--- --- BMP Dimensions --- ---"
+               wid <- getVar "Enter Image Width: "
+               let widthV = validateI wid
+               hei <- getVar "Enter Image Height: "
+               let heightV = validateI hei
+               return $ fsCreateDim (widthV) (heightV)
+getBoundaries :: IO (FractalBoundaries)
+getBoundaries = do
+                putStrLn "--- --- Fractal Boundaries --- ---"
+                xm <- getVar "Enter Left X Coordinate: "
+                let xmV = validateF xm
+                xmx <- getVar "Enter Right X Coordinate: "
+                let xmxV = validateF xmx
+                ym <- getVar "Enter Bottom Y Coordinate: "
+                let ymV = validateF ym
+                ymx <- getVar "Enter Top Y Coordinate: "
+                let ymxV = validateF ymx
+                return $ fsCreateBou xmxV xmV ymxV ymV
+getFunction :: IO (Int)
+getFunction = do
+              putStrLn "--- --- Generator Function --- ---"
+              index <- loopVal "'1': MandelBrot | '2': Cyclic | '3': Repeated Roots | '4': 5 Real Roots" "1234"
+              let indexV = validateI [index]
+              return indexV
+getParametersPlusFf :: IO ((Parameters),(ComplexFunction,ComplexFunction))
+getParametersPlusFf = do
+                       fV <- getFunction
+                       putStrLn "--- --- Calculation Parameters --- ---"
+                       mxIter <- getVar "Enter Maximum Iterations Per Pixel: "
+                       let mxIterV = validateI mxIter
+                       mxEps <- getVar "Enter Minimum Convergence distance (epsilon): "
+                       let mxEpsV = validateF mxEps
+                       let (ff',rc) = getff' fV
+                       putStrLn "--- Rendering Method ---"
+                       index <- loopVal "'1': predefined root-colours | '2': distance to root" "12"
+                       let renderMethod = (case index of
+                                             '1' -> do
+                                                   putStrLn "--- Cutoff Method ---"
+                                                   cutoff <- getVar "Enter Minimum Distance To Actual Root To Colour pixel (=epsilon default): "
+                                                   let cutoffV = validateF cutoff
+                                                   shadeTop <- getVar "Enter peak brightness Iteration (=max iterations default): "
+                                                   let shadeTopV = validateI shadeTop
+                                                   return $ fsCreateRenCutoff shadeTopV cutoffV
+                                             '2' -> do
+                                                   putStrLn "--- Distance Method ---"
+                                                   shadeTop <- getVar "Enter peak brightness Iteration (=max iterations default): "
+                                                   let shadeTopV = validateI shadeTop
+                                                   return $ fsCreateRenDist shadeTopV)
+                       rm <- renderMethod
+                       return ((fsCreateParams rm rc mxIterV mxEpsV),ff')
+getAnims :: IO [AnimationType]
+getAnims = do
+           putStrLn "--- --- Animation Settings --- ---"
+           putStrLn "-- you can add multiple animations, select none to finish selection --"
+           choice <- loopVal "'1': Zoom | '2': no Zoom" "12"
+           let zoom = case choice of
+                       '1' -> do
+                               x <- getVar "Enter x coordinate of Zoom: "
+                               let xV = validateF x
+                               y <- getVar "Enter y coordinate of Zoom: "
+                               let yV = validateF y
+                               mf <- getVar "Enter magnification factor (2 = 2x zoom): "
+                               let mfV = validateF mf
+                               return $ (Zoom (xV:+yV) mfV)
+                       '2' -> return None
+           z <- zoom :: IO AnimationType
+           choice <- loopVal "'1': shift on max Iterations | '2': shift on epsilon | '3': shift on root colours | '4': None" "1234"
+           let choiceV = validateI [choice]
+           step <- if choiceV /= 4 then getVar "Enter step per frame of this shifter: " else return "0"
+           let stepV = validateF step
+           psShifter <- return $ getShifter choiceV stepV
+           return $ z:psShifter:[]
+getShifter ::Int -> Double -> AnimationType
+getShifter index ste =  case index of
+                         1 -> (ParameterShift ([psIterations]) [ste])
+                         2 -> (ParameterShift ([psEpsilon]) [ste])
+                         3 -> (ParameterShift ([psRootCols]) [ste])
+                         4 -> (None)
+  -- Generate enum imgDim fracBound renderSettings iters eps animType =
+loopVal :: String -> [Char] -> IO Char
+loopVal prompt xs = do
+                    putStrLn prompt
+                    choice <- getLine
+                    if (head choice) `elem` xs then
+                       return (head choice)
+                    else loopVal prompt xs
+
+getVar :: String -> IO String
+getVar prompt = do
+                putStrLn prompt
+                a <-getLine
+                return a
+choiceIO :: [a] -> [String] -> IO a
+choiceIO choices prompts = undefined
 -----------------------------------------------------------------------------Rendering
 write ::  FractalSettings -> String -> IO ()
 write fs filename =  writeBMP filename bmp >> putStrLn ("Saved:" ++ filename)
@@ -173,7 +232,7 @@ main = do
        --fs <- inputFS
       -- let n = validateI nm
        let n = 50
-       let fs = testSettings2
+       fs <- getFS
        if n <= 1 then
          write fs (filename ++ ".bmp")
        else
