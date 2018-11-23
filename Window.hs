@@ -180,12 +180,12 @@ create = do
     grid <- tableNew 5 8 False
 
     createLabel "X boundries" >>= attach grid 0 1 1 1
-    xMinW <- createDoubleEntryField "-1.0" >>= attach grid 1 1 1 1
-    xMaxW <- createDoubleEntryField "1.0" >>= attach grid 2 1 1 1
+    xMinW <- createDoubleEntryField "-5.0" >>= attach grid 1 1 1 1
+    xMaxW <- createDoubleEntryField "5.0" >>= attach grid 2 1 1 1
 
     createLabel "Y boundries" >>= attach grid  0 2 1 1
-    yMinW <- createDoubleEntryField "-1.0" >>= attach grid 1 2 1 1
-    yMaxW <- createDoubleEntryField "1.0" >>= attach grid 2 2 1 1
+    yMinW <- createDoubleEntryField "-5.0" >>= attach grid 1 2 1 1
+    yMaxW <- createDoubleEntryField "5.0" >>= attach grid 2 2 1 1
 
     createLabel "Epsilon" >>= attach grid 0 3 1 1
     epsW <- createDoubleEntryField "0.001" >>= attach grid 1 3 1 1
@@ -217,7 +217,7 @@ create = do
     anim3 <- createToggleButton "Darkerer" >>= attach grid 4 7 1 1
 
     
-    drawMode <- createToggleButton "Draw Based on distance" >>= attach grid 4 0 1 1
+    drawMode <- createToggleButton "Draw Based on distance" >>= attach grid 4 1 1 1
     -- drawing
 
     pixbuf <- pixbufNew ColorspaceRgb True 8 imageDimX imageDimY
