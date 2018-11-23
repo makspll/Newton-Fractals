@@ -18,7 +18,7 @@ filename = "fractal"
 #ifdef __GUI_APP
 
 main = do
-    win <- Win.create 
+    win <- Win.create
     return (0)
 
 #else
@@ -26,7 +26,7 @@ main = do
 
 
 
-
+ 
 main = do
        getNumCapabilities >>= setNumCapabilities
        putStrLn "Maks & Michal 2k18 >>= with love >> we present you with..."

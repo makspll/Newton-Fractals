@@ -1,4 +1,4 @@
-module Rendering (write,simAnimate,psIterations,psEpsilon,psRootCols,generateImage,
+module Rendering (write,simAnimate,psIterations,psEpsilon,psRootCols,psCutoffEps,psUpperShader,generateImage,
                   generateImageWithFrame)
 
 where
@@ -69,7 +69,20 @@ applyParameterShift funcs steps fs frame = newfs
 
 ---Parameter Shifters
 -- Used to obtain nice animation effects by changing parameters
-
+psCutoffEps :: ParameterModify
+psCutoffEps (Param renderSettings constRootCols constInterpolates constIters constEpsi) currentDelta =newParam
+    where
+        newParam = Param (newRS) constRootCols constInterpolates constIters constEpsi
+        newRS = case renderSettings of
+                  (Cutoff upperShader eps) -> Cutoff (upperShader) (eps+currentDelta)
+                  (DistanceR upperShader) -> DistanceR (upperShader)
+psUpperShader :: ParameterModify
+psUpperShader (Param renderSettings constRootCols constInterpolates constIters constEpsi) currentDelta =newParam
+    where
+        newParam = Param (newRS) constRootCols constInterpolates constIters constEpsi
+        newRS = case renderSettings of
+                  (Cutoff upperShader eps) -> Cutoff (upperShader + (round currentDelta)) eps
+                  (DistanceR upperShader) -> DistanceR (upperShader + (round currentDelta))
 psIterations :: ParameterModify
 psIterations (Param constRenderSettings constRootCols constInterpolates constIters
         constEpsilon) currentDelta = newParam

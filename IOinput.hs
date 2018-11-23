@@ -11,7 +11,10 @@ inputFS = undefined
 --FS (ComplexFunction,ComplexFunction) ImageDimensions FractalBoundaries Parameters [AnimationType]
 inputDefaultFS :: IO (ComplexFunction,ComplexFunction)
 inputDefaultFS = undefined
-
+reValidInt :: String -> String -> Int
+reValidInt prompt string = do
+                           putStrLn prompt
+                           choice <- getLine
 validateF :: String -> Double
 validateF x = fromMaybe (0.0) $readMaybe (x)
 
@@ -93,11 +96,11 @@ getAnims = do
                        '2' -> return None
            z <- zoom :: IO AnimationType
            let shifter =do
-                         choice <- loopVal "'1': shift on max Iterations | '2': shift on epsilon | '3': shift on root colours | '4': None" "1234"
+                         choice <- loopVal "'1': None | '2': shift on epsilon | '3': shift on colours |\n'4': shift on max Iters | '5': shift on upperShader |\n '6': shift on colouring cutoff " "123456"
                          let choiceV = validateI [choice]
-                         step <- if choiceV /= 4 then getVar "Enter step per frame of this shifter: " else return "0"
+                         step <- if choiceV /= 1 then getVar "Enter step per frame of this shifter: " else return "0"
                          let stepV = validateF step
-                         if (choiceV == 4) then
+                         if (choiceV == 1) then
                             return $ [getShifter choiceV stepV]
                          else do
                             shiter <- shifter
@@ -114,10 +117,12 @@ loopValUntill prompt stoppingC f = do
 
 getShifter ::Int -> Double -> AnimationType
 getShifter index ste =  case index of
-                         1 -> (ParameterShift ([psIterations]) [ste])
+                         1 -> (None)
                          2 -> (ParameterShift ([psEpsilon]) [ste])
                          3 -> (ParameterShift ([psRootCols]) [ste])
-                         4 -> (None)
+                         4 -> (ParameterShift ([psIterations]) [ste])
+                         5 -> (ParameterShift ([psUpperShader]) [ste])
+                         6 -> (ParameterShift ([psCutoffEps]) [ste])
   -- Generate enum imgDim fracBound renderSettings iters eps animType =
 loopVal :: String -> [Char] -> IO Char
 loopVal prompt xs = do
