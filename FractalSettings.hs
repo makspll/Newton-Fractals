@@ -27,6 +27,7 @@ module FractalSettings (FractalSettings(..),
                         fsCreateBou,
                         fsCreateRenDist,
                         fsCreateRenCutoff,
+                        fsCreate,
                         getff',
                         XYInt,XYDouble,ColorW8,Pixel,RootCols,ComplexFunction,FractalBoundaries,ParameterModify,ImageDimensions)
 where
@@ -167,7 +168,6 @@ fsAnimType :: FractalSettings -> [AnimationType]
 fsAnimType (FS _ _ _ _ a) = a
 fsParams :: FractalSettings -> Parameters
 fsParams (FS _ _ _ p _) = p
-
 
 generateInterpolates :: RootCols -> [(Int -> Int)]
 generateInterpolates rootCols = [redInterpolate,blueInterpolate,greenInterpolate]

@@ -22,21 +22,21 @@ getFS =do
 getImageDims :: IO (ImageDimensions)
 getImageDims = do
                putStrLn "--- --- BMP Dimensions --- ---"
-               wid <- getVar "Enter Image Width: "
+               wid <- getVar "Enter Image Width: (Int)"
                let widthV = validateI wid
-               hei <- getVar "Enter Image Height: "
+               hei <- getVar "Enter Image Height: (Int)"
                let heightV = validateI hei
                return $ fsCreateDim (widthV) (heightV)
 getBoundaries :: IO (FractalBoundaries)
 getBoundaries = do
                 putStrLn "--- --- Fractal Boundaries --- ---"
-                xm <- getVar "Enter Left X Coordinate: "
+                xm <- getVar "Enter Left X Coordinate: (Float)"
                 let xmV = validateF xm
-                xmx <- getVar "Enter Right X Coordinate: "
+                xmx <- getVar "Enter Right X Coordinate: (Float)"
                 let xmxV = validateF xmx
-                ym <- getVar "Enter Bottom Y Coordinate: "
+                ym <- getVar "Enter Bottom Y Coordinate: (Float)"
                 let ymV = validateF ym
-                ymx <- getVar "Enter Top Y Coordinate: "
+                ymx <- getVar "Enter Top Y Coordinate: (Float)"
                 let ymxV = validateF ymx
                 return $ fsCreateBou xmxV xmV ymxV ymV
 getFunction :: IO (Int)
@@ -49,9 +49,9 @@ getParametersPlusFf :: IO ((Parameters),(ComplexFunction,ComplexFunction))
 getParametersPlusFf = do
                        fV <- getFunction
                        putStrLn "--- --- Calculation Parameters --- ---"
-                       mxIter <- getVar "Enter Maximum Iterations Per Pixel: "
+                       mxIter <- getVar "Enter Maximum Iterations Per Pixel: (Int)"
                        let mxIterV = validateI mxIter
-                       mxEps <- getVar "Enter Minimum Convergence distance (epsilon): "
+                       mxEps <- getVar "Enter Minimum Convergence distance (epsilon): (Float)"
                        let mxEpsV = validateF mxEps
                        let (ff',rc) = getff' fV
                        putStrLn "--- Rendering Method ---"
@@ -59,14 +59,14 @@ getParametersPlusFf = do
                        let renderMethod = (case index of
                                              '1' -> do
                                                    putStrLn "--- Cutoff Method ---"
-                                                   cutoff <- getVar "Enter Minimum Distance To Actual Root To Colour pixel (=epsilon default): "
+                                                   cutoff <- getVar "Enter Minimum Distance To Actual Root To Colour pixel (=epsilon default): (Float)"
                                                    let cutoffV = validateF cutoff
-                                                   shadeTop <- getVar "Enter peak brightness Iteration (=max iterations default): "
+                                                   shadeTop <- getVar "Enter peak brightness Iteration (=max iterations default): (Int)"
                                                    let shadeTopV = validateI shadeTop
                                                    return $ fsCreateRenCutoff shadeTopV cutoffV
                                              '2' -> do
                                                    putStrLn "--- Distance Method ---"
-                                                   shadeTop <- getVar "Enter peak brightness Iteration (=max iterations default): "
+                                                   shadeTop <- getVar "Enter peak brightness Iteration (=max iterations default): (Int)"
                                                    let shadeTopV = validateI shadeTop
                                                    return $ fsCreateRenDist shadeTopV)
                        rm <- renderMethod
@@ -74,23 +74,23 @@ getParametersPlusFf = do
 getAnims :: IO [AnimationType]
 getAnims = do
            putStrLn "--- --- Animation Settings --- ---"
-           putStrLn "-- you can add multiple animations, select none to finish selection --"
            choice <- loopVal "'1': Zoom | '2': no Zoom" "12"
            let zoom = case choice of
                        '1' -> do
-                               x <- getVar "Enter x coordinate of Zoom: "
+                               x <- getVar "Enter x coordinate of Zoom: (Float)"
                                let xV = validateF x
-                               y <- getVar "Enter y coordinate of Zoom: "
+                               y <- getVar "Enter y coordinate of Zoom: (Float)"
                                let yV = validateF y
-                               mf <- getVar "Enter magnification factor (2 = 2x zoom): "
+                               mf <- getVar "Enter magnification factor (2 = 2x zoom): (Float)"
                                let mfV = validateF mf
                                return $ (Zoom (xV:+yV) mfV)
                        '2' -> return None
            z <- zoom :: IO AnimationType
            let shifter =do
-                         choice <- loopVal "'1': None | '2': shift on epsilon | '3': shift on colours |\n'4': shift on max Iters | '5': shift on upperShader |\n '6': shift on colouring cutoff " "123456"
+                         putStrLn "-- you can add multiple animations, select none to finish selection --"
+                         choice <- loopVal "'1': None            |'2': shift on epsilon|'3': shift on colours|'4': shift Iterations |\n'5':shift on upperShader|'6': shift on colouring cutoff " "123456"
                          let choiceV = validateI [choice]
-                         step <- if choiceV /= 1 then getVar "Enter step per frame of this shifter: " else return "0"
+                         step <- if choiceV /= 1 then getVar "Enter step per frame of this shifter: (Float)" else return "0"
                          let stepV = validateF step
                          if (choiceV == 1) then
                             return $ [getShifter choiceV stepV]

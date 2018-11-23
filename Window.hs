@@ -12,7 +12,7 @@ import qualified Data.ByteString as BS
 import Foreign.Marshal.Array ( newArray )
 import Foreign.C.Types
 
-import Rendering 
+import Rendering
 import FractalSettings
 
 imageDimX = 200
@@ -95,7 +95,7 @@ createButton str = do
     return button
 
 createToggleButton :: String -> IO CheckButton
-createToggleButton label = do 
+createToggleButton label = do
     button <- checkButtonNew
     set button [ buttonLabel := label ]
     return button
@@ -111,7 +111,7 @@ createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs (zoomToggle, 
     yMaxText <- (entryGetText yMaxW) :: IO String ;  let yMax = read xMaxText :: Double
     epsText  <- (entryGetText epsW)  :: IO String ;  let eps  = read epsText  :: Double
     iteText  <- (entryGetText iteW)  :: IO String ;  let ite  = read iteText  :: Int
-    zoom <- toggleButtonGetActive zoomToggle 
+    zoom <- toggleButtonGetActive zoomToggle
     xZoomT   <- (entryGetText xZoom) :: IO String ; let xZ    = read xZoomT   :: Double
     yZoomT   <- (entryGetText yZoom) :: IO String ; let yZ    = read yZoomT   :: Double
     let zoomParam = if zoom then (Zoom (xZ :+ yZ) 1.01) else None
@@ -127,11 +127,11 @@ createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs (zoomToggle, 
 
     useDistance <- toggleButtonGetActive distDrawW
 
-    let testSettings2 = fsGenerate enum 
-            (imageDimX,imageDimY) 
-            ((xMax,xMin),(yMax,yMin)) 
+    let testSettings2 = fsGenerate enum
+            (imageDimX,imageDimY)
+            ((xMax,xMin),(yMax,yMin))
             (if useDistance then DistanceR ite else (Cutoff ite eps))
-            (if ite > 20 then ite else 20) eps 
+            (if ite > 20 then ite else 20) eps
             [zoomParam, if zoom then ParameterShift [psIterations, psUpperShader] [1.0, 1.0] else None
                 , if anim0 then ParameterShift [psIterations] [1.0] else None
                 , if anim1 then ParameterShift [psEpsilon] [0.001] else None
@@ -146,12 +146,12 @@ createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs (zoomToggle, 
             a1 <- toggleButtonGetActive r1
             a2 <- toggleButtonGetActive r2
             a3 <- toggleButtonGetActive r3
-            if a0 then return 0 else 
+            if a0 then return 0 else
                 if a1 then return 1 else
                     if a2 then return 2 else
                         if a3 then return 3 else return 0
 
-startAnimation (fs, frames) state fsToBmp = 
+startAnimation (fs, frames) state fsToBmp =
     let bmps = map (fsToBmp fs) [0..frames]
     in
     writeIORef state (bmps, 0, frames)
@@ -205,7 +205,7 @@ create = do
     zoomButton <- createToggleButton "Zoom" >>= attach grid 1 5 1 1
     xZoom <- createDoubleEntryField "0.0" >>= attach grid 2 5 1 1
     yZoom <- createDoubleEntryField "0.0" >>= attach grid 3 5 1 1
-    
+
     createLabel "Animations: " >>= attach grid 0 6 1 1
     createLabel "Frames: " >>= attach grid 2 6 1 1
     framesNo <- createIntEntryField "1" >>= attach grid 3 6 1 1
@@ -216,7 +216,7 @@ create = do
     anim2 <- createToggleButton "Change colors \n(best \\w 16 frames)" >>= attach grid 3 7 1 1
     anim3 <- createToggleButton "Darkerer" >>= attach grid 4 7 1 1
 
-    
+
     drawMode <- createToggleButton "Draw Based on distance" >>= attach grid 4 1 1 1
     -- drawing
 
