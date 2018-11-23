@@ -6,13 +6,7 @@ import Data.Complex
 import Data.Maybe
 import Text.Read
 
-inputFS :: IO FractalSettings --testSettings = FS (2000,2000) ((1,-1),(1,-1)) (Param (DistanceR 30) rootcolours 20 0.000001)
-inputFS = undefined
---FS (ComplexFunction,ComplexFunction) ImageDimensions FractalBoundaries Parameters [AnimationType]
-inputDefaultFS :: IO (ComplexFunction,ComplexFunction)
-inputDefaultFS = undefined
-reValidInt :: String -> String -> Int
-reValidInt prompt string = undefined
+
 validateF :: String -> Double
 validateF x = fromMaybe (0.0) $readMaybe (x)
 

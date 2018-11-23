@@ -46,17 +46,17 @@ type ColInterpolate = Int -> Int
 type ParameterModify =  Parameters -> Double -> Parameters
 type ImageDimensions = (XYInt) -- (width,height)
 
---DistanceR Int     - colour based on distance to all roots 
+--DistanceR Int     - colour based on distance to all roots
 --                  takes shading Max Iterations
---Cutoff Int Double - colour based on root reached  
---                  takes shading Max Iterations and cutoff point 
---                  (compares root with actual root converged, 
+--Cutoff Int Double - colour based on root reached
+--                  takes shading Max Iterations and cutoff point
+--                  (compares root with actual root converged,
 --                  if distance to actual root < cutoff point paint it black)
-data RenderSettings = DistanceR Int 
-                    | Cutoff Int Double  
+data RenderSettings = DistanceR Int
+                    | Cutoff Int Double
 
 -- list of colours and roots,
--- interpolates are functions which allow gradient sliding between colours for some animations, 
+-- interpolates are functions which allow gradient sliding between colours for some animations,
 -- then max Iterations and epsilon
 data Parameters = Param RenderSettings RootCols [ColInterpolate] Int Double
 
@@ -64,18 +64,18 @@ data Parameters = Param RenderSettings RootCols [ColInterpolate] Int Double
 --                                  takes point to zoom to and speed of zoom
 -- ParameterShift [ParameterModify] [Double]  - responsible for any animation
 --                                  that is based around changing parameters
---                                  initial param comes from original fs, 
+--                                  initial param comes from original fs,
 --                                  double is the step per frame, can be negative
 data AnimationType = Zoom (Complex Double) Double
-                   | ParameterShift [ParameterModify] [Double] 
+                   | ParameterShift [ParameterModify] [Double]
                    | None
 
 -- fsGenerate should be used to create Fractal settings
-data FractalSettings = FS 
+data FractalSettings = FS
     (ComplexFunction,ComplexFunction) -- function and its derivative
     ImageDimensions -- image dimensions to generate in pixels
     FractalBoundaries -- boundaries of fractal in complex doubles
-    Parameters 
+    Parameters
     [AnimationType] -- how the fractal should be animated or [None]
 
 colours = [(255,0,0),(0,255,255),(0,255,0),(255,165,0),(128,0,128),(255,255,0)] :: [ColorW8]
