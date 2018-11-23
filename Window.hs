@@ -179,11 +179,11 @@ create = do
 
     grid <- tableNew 5 8 False
 
-    createLabel "X boundries" >>= attach grid 0 1 1 1
+    createLabel "X boundaries" >>= attach grid 0 1 1 1
     xMinW <- createDoubleEntryField "-5.0" >>= attach grid 1 1 1 1
     xMaxW <- createDoubleEntryField "5.0" >>= attach grid 2 1 1 1
 
-    createLabel "Y boundries" >>= attach grid  0 2 1 1
+    createLabel "Y boundaries" >>= attach grid  0 2 1 1
     yMinW <- createDoubleEntryField "-5.0" >>= attach grid 1 2 1 1
     yMaxW <- createDoubleEntryField "5.0" >>= attach grid 2 2 1 1
 
