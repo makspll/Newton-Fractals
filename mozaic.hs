@@ -74,12 +74,12 @@ write' (hei,wid) (xBoxes,yBoxes) filename frame=  writeBMP (filename++(show fram
   where rgba = generateImage' (hei,wid) (xBoxes,yBoxes) frame
         bmp = packRGBA32ToBMP (wid) (hei) (rgba)
 
-anims = [(ParameterShift [psRootCols] [25]),(ParameterShift [psUpperShader] [10]),(ParameterShift [psEpsilon] [0.0005]),(ParameterShift [psCutoffEps] [0.0005]),(ParameterShift [psRootCols] [50]),(ParameterShift [psIterations] [1])]
+anims = [(ParameterShift [psRootCols] [25]),(ParameterShift [psUpperShader] [10]),(ParameterShift [psEpsilon] [0.0005]),(ParameterShift [psRootCols] [25]),(ParameterShift [psCutoffEps] [0.0005]),(ParameterShift [psRootCols] [50]),(ParameterShift [psIterations] [1])]
 
 createFSFromXY :: (Int,Int) -> (Int,Int) -> FractalSettings
-createFSFromXY (hei,wid) (x,y) = fsCreate (fst ffrc) (hei,wid) bounds render (snd ffrc)  ((x+y)*2) (0.0001) anim --(f,f') imgDim fracBound renderSettings rootCols maxIters eps animType =
-    where anim = (None):(drop (x`div`6) anims)
-          render = (if even x then DistanceR ((x+y)*3) else Cutoff ((x+y)*2) ((fromIntegral (x+y))/ 1000))
+createFSFromXY (hei,wid) (x,y) = fsCreate (fst ffrc) (hei,wid) bounds render (snd ffrc) 40 (0.0001) anim --(f,f') imgDim fracBound renderSettings rootCols maxIters eps animType =
+    where anim = [ParameterShift [psRootCols] [1]]-- :(take (y`mod`4) $drop (x`mod`3) anims)
+          render = (if even y then DistanceR 40 else Cutoff 40 ((fromIntegral (x+y))/ 1000))
           bounds = ((20,-20),(20,-20))
           ffrc = getff' ((x+y)`mod`4)
 combineListGbyRows :: [[[BSBS.Builder]]] -> [[BSBS.Builder]]
@@ -95,5 +95,5 @@ combineGbyRows (r:rows) (r2:rows2) = [ r <> r2 ] ++ combineGbyRows rows rows2
 testFs = fsGenerate 0 (100,100) ((1,-1),(1,-1)) (Cutoff 20 0.001) 20 0.001 [None]
 
 main = do
-       mapM_ (write' (1000,1000) (10,10) "Mozaic") [0..20]
+       mapM_ (write' (1000,1000) (5,5) "Mozaic") [0..255]
        putStrLn "Done"
