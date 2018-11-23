@@ -168,7 +168,6 @@ fsAnimType (FS _ _ _ _ a) = a
 fsParams :: FractalSettings -> Parameters
 fsParams (FS _ _ _ p _) = p
 
-
 generateInterpolates :: RootCols -> [(Int -> Int)]
 generateInterpolates rootCols = [redInterpolate,blueInterpolate,greenInterpolate]
   where redInterpolate = generateInterpolate $ foldr (\(rt,(r,g,b)) acc -> (fromIntegral r) : acc ) [] rootCols

@@ -44,9 +44,12 @@ main = do
        putStrLn "To begin the ultimate yeet experience, enter no.of frames:  "
        n <- getLine
        let nV = read n
+       putStrLn "Enter starting frame: (Int)"
+       i<- getLine
+       let iV = read i
        fs <- getFS
        if nV <= 1 then
          write fs ("fractal" ++ ".bmp")
        else
-         mapM_ (simAnimate fs ) [0..nV]
+         mapM_ (simAnimate fs ) [iV..nV]
 #endif

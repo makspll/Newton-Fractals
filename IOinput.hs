@@ -74,7 +74,6 @@ getParametersPlusFf = do
 getAnims :: IO [AnimationType]
 getAnims = do
            putStrLn "--- --- Animation Settings --- ---"
-           putStrLn "-- you can add multiple animations, select none to finish selection --"
            choice <- loopVal "'1': Zoom | '2': no Zoom" "12"
            let zoom = case choice of
                        '1' -> do
@@ -88,6 +87,7 @@ getAnims = do
                        '2' -> return None
            z <- zoom :: IO AnimationType
            let shifter =do
+                         putStrLn "-- you can add multiple animations, select none to finish selection --"
                          choice <- loopVal "'1': None            |'2': shift on epsilon|'3': shift on colours|'4': shift Iterations |\n'5':shift on upperShader|'6': shift on colouring cutoff " "123456"
                          let choiceV = validateI [choice]
                          step <- if choiceV /= 1 then getVar "Enter step per frame of this shifter: (Float)" else return "0"

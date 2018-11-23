@@ -1,7 +1,6 @@
 Installation
 
 	cabal install BMP
-	cabal install Control
 	cabal install bytestring-strict-builder
 
 For non gui version for generating AWESOME fractals
