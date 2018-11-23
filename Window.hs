@@ -100,8 +100,8 @@ createToggleButton label = do
     set button [ buttonLabel := label ]
     return button
 
-createFsFromWidgets :: (Entry, Entry) -> (Entry, Entry) -> Entry -> Entry -> [RadioButton] -> (CheckButton, Entry, Entry) -> Entry -> [CheckButton]-> IO (FractalSettings, Int)
-createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs (zoomToggle, xZoom, yZoom) animFrames [anim0W, anim1W, anim2W, anim3W, anim4W]
+createFsFromWidgets :: (Entry, Entry) -> (Entry, Entry) -> Entry -> Entry -> [RadioButton] -> (CheckButton, Entry, Entry) -> Entry -> [CheckButton]-> CheckButton -> IO (FractalSettings, Int)
+createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs (zoomToggle, xZoom, yZoom) animFrames [anim0W, anim1W, anim2W, anim3W, anim4W] distDrawW
     = do
     mapM_ (formatField False False) [xMinW , xMaxW, yMinW, yMaxW, epsW, xZoom, yZoom]
     mapM_ (formatField True False) [iteW, animFrames]
@@ -125,10 +125,12 @@ createFsFromWidgets (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW rbutWs (zoomToggle, 
     anim3 <- toggleButtonGetActive anim3W
     anim4 <- toggleButtonGetActive anim4W
 
+    useDistance <- toggleButtonGetActive distDrawW
+
     let testSettings2 = fsGenerate enum 
             (imageDimX,imageDimY) 
             ((xMax,xMin),(yMax,yMin)) 
-            (Cutoff ite eps)
+            (if useDistance then DistanceR ite else (Cutoff ite eps))
             (if ite > 20 then ite else 20) eps 
             [zoomParam, if zoom then ParameterShift [psIterations, psUpperShader] [1.0, 1.0] else None
                 , if anim0 then ParameterShift [psIterations] [1.0] else None
@@ -214,6 +216,8 @@ create = do
     anim2 <- createToggleButton "Change colors \n(best \\w 16 frames)" >>= attach grid 3 7 1 1
     anim3 <- createToggleButton "Darkerer" >>= attach grid 4 7 1 1
 
+    
+    drawMode <- createToggleButton "Draw Based on distance" >>= attach grid 4 0 1 1
     -- drawing
 
     pixbuf <- pixbufNew ColorspaceRgb True 8 imageDimX imageDimY
@@ -224,9 +228,9 @@ create = do
     state <- (newIORef ([], 0, 0))
 
     renderButton <- createButton "Do The *MAGIC*" >>= attach grid 0 8 5 1
-    on renderButton buttonActivated (updateImage fsToBmp state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) framesNo [anim0, anim1, anim2, anim3, anim4] )
+    on renderButton buttonActivated (updateImage fsToBmp state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) framesNo [anim0, anim1, anim2, anim3, anim4] drawMode )
 
-    updateImage fsToBmp state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) framesNo [anim0, anim1, anim2, anim3, anim4]
+    updateImage fsToBmp state (xMinW, xMaxW) (yMinW, yMaxW) epsW iteW [r0,r1,r2,r3] (zoomButton, yZoom, xZoom) framesNo [anim0, anim1, anim2, anim3, anim4] drawMode
 
     containerAdd win grid
     widgetShowAll win
@@ -239,7 +243,7 @@ create = do
         attach pare x y w h chil = do
             tableAttach pare chil x (x+w) y (y+h) [Fill] [Fill] 0 0
             return chil
-        updateImage fsToBmp state xs ys eps it rs zms ams anims = do
-            fs <- createFsFromWidgets xs ys eps it rs zms ams anims
+        updateImage fsToBmp state xs ys eps it rs zms ams anims dM= do
+            fs <- createFsFromWidgets xs ys eps it rs zms ams anims dM
             startAnimation fs state fsToBmp
             return ()
