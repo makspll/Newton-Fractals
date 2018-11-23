@@ -1,6 +1,6 @@
 FILES = main.hs 
 
-EXEC = prog
+EXEC = Fractals
 
 FLAGS = --make -threaded
 DEBUG = -prof -fprof-auto +RTS -p -hy
