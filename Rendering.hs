@@ -47,7 +47,7 @@ zoomToRoot _ _ fs 0 = fs
 zoomToRoot (a:+b) zoomFactor fs frame = FS (fsFs fs) (fsDim fs) ((a + deltaX,a - deltaX),(b + deltaY, b - deltaY)) (fsParams fs) (fsAnimType fs)
   where
         curDim = (abs (fsXBound1 fs - fsXBound2 fs),abs (fsYBound1 fs - fsYBound2 fs))
-        newDimension = mapTuple (curDim) (*(1/(zoomFactor * fromIntegral frame)))
+        newDimension = mapTuple (curDim) (*(1/(zoomFactor * fromIntegral frame^2)))
         deltaX = (fst newDimension) /2
         deltaY = (snd newDimension) /2
 
