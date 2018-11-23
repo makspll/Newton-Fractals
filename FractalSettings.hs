@@ -27,6 +27,7 @@ module FractalSettings (FractalSettings(..),
                         fsCreateBou,
                         fsCreateRenDist,
                         fsCreateRenCutoff,
+                        fsCreate,
                         getff',
                         XYInt,XYDouble,ColorW8,Pixel,RootCols,ComplexFunction,FractalBoundaries,ParameterModify,ImageDimensions)
 where
