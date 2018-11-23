@@ -18,14 +18,11 @@ filename = "fractal"
 #ifdef __GUI_APP
 
 main = do
+    getNumCapabilities >>= setNumCapabilities
     win <- Win.create
     return (0)
 
 #else
-
-
-
-
 
 main = do
        getNumCapabilities >>= setNumCapabilities
