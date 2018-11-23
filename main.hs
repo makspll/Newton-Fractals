@@ -26,10 +26,10 @@ main = do
 
 
 
- 
+
 main = do
        getNumCapabilities >>= setNumCapabilities
-       putStrLn "Maks & Michał 2k18 >>= with love >> we present you with..."
+       putStrLn "Maks & Michal 2k18 >>= with love >> we present you with..."
        putStrLn "----------------------------------------------------------"
        putStrLn "  __                _        _     _     _ _  _ _ _ _ _   "
        putStrLn " / _|              | |      | |    \\ \\  |  _||  _|_   _|  "

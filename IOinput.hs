@@ -12,9 +12,7 @@ inputFS = undefined
 inputDefaultFS :: IO (ComplexFunction,ComplexFunction)
 inputDefaultFS = undefined
 reValidInt :: String -> String -> Int
-reValidInt prompt string = do
-                           putStrLn prompt
-                           choice <- getLine
+reValidInt prompt string = undefined
 validateF :: String -> Double
 validateF x = fromMaybe (0.0) $readMaybe (x)
 
@@ -51,7 +49,7 @@ getFunction :: IO (Int)
 getFunction = do
               putStrLn "--- --- Generator Function --- ---"
               index <- loopVal "'1': MandelBrot | '2': Cyclic | '3': Repeated Roots | '4': 5 Real Roots" "1234"
-              let indexV = validateI [index]
+              let indexV = (validateI [index]) -1
               return indexV
 getParametersPlusFf :: IO ((Parameters),(ComplexFunction,ComplexFunction))
 getParametersPlusFf = do
