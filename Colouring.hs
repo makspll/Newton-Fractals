@@ -40,4 +40,4 @@ colourWithDToR rootColours (root,ite) maxShadeIter =  mconcat [BSBS.word8 r,BSBS
   where scaledIte = scaleVar (fromIntegral ite) (fromIntegral maxShadeIter,0) (1,0)
         switchToDist = map (\(r,c) -> (((distanceFactor r root):+0),(c))) rootColours :: [((Complex Double),(ColorW8))]
         distanceFactor rt1 rt2 = (scaleVar (magnitude ((rt1) - rt2)) (100,0) (0,1))
-        (r,g,b) =clampLoopedRGB$ foldr1 (\c c2-> mixRGB c c2) [mapTuple3 (cr,cg,cb) (\x-> round $(fromIntegral x)*df *scaledIte)| ((df:+nan),(cr,cg,cb))<-switchToDist] --bound this
+        (r,g,b) = foldr1 (\c c2-> mixRGB c c2) [mapTuple3 (cr,cg,cb) (\x-> round $(fromIntegral x)*df *scaledIte)| ((df:+nan),(cr,cg,cb))<-switchToDist] --bound this
