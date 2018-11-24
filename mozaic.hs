@@ -19,7 +19,7 @@ mapFractal' f f' fs (bx,by) (fracW, fracH) (pixW, pixH) inters eps =  [[nM (((bx
 generateImage' :: (Int,Int)-> (Int,Int)-> Int -> BS.ByteString
 generateImage' (hei,wid) (xBoxes,yBoxes) frame =BSBS.builderBytes $mconcat $ mconcat $ foldr (\g acc ->  (combineListGbyRows g)++acc ) [[]] (gridOfgrids)
   where gridOfgrids = testf' (nmOnBox' (hei,wid) (xBoxes,yBoxes)) [[(x,y) |x <- [0..(xBoxes-1)]] | y <- [0..(yBoxes-1)]]
-        nmOnBox' (hei,wid) (xBoxes,yBoxes) (x,y)  = nmOnBox (x,y) (xBoxes,yBoxes) (simAnimate' (createFSFromXY (hei,wid) (x,y)) frame)
+        nmOnBox' (hei,wid) (xBoxes,yBoxes) (x,y)  = nmOnBox2 (x,y) (xBoxes,yBoxes) (simAnimate' (createFSFromXY (hei`div`yBoxes,wid`div`xBoxes) (x,y)) frame)
 
 nmOnBox (x,y) (xBoxes,yBoxes) fs= mapFractal' f f' fs (minfX + fracXAtX x ,minfY + fracYAtY y) (fTotalW / (toD xBoxes) , fTotalH / (toD yBoxes)) (pixTotalW `div` xBoxes , pixTotalH `div` yBoxes) inters eps
     where toD = fromIntegral
@@ -31,7 +31,16 @@ nmOnBox (x,y) (xBoxes,yBoxes) fs= mapFractal' f f' fs (minfX + fracXAtX x ,minfY
           fracYAtY y= (toD (y * yStep)*) $ fTotalH/ (toD pixTotalH)
           xStep = pixTotalH `div` xBoxes
           yStep = pixTotalW `div` yBoxes
-
+nmOnBox2 (x,y) (xBoxes,yBoxes) fs= mapFractal' f f' fs (minfX,minfY) (fTotalW , fTotalH) (pixTotalW, pixTotalH) inters eps
+    where toD = fromIntegral
+          f = fsF fs
+          f' = fsF' fs
+          (minfX, minfY, fTotalW,fTotalH) = (fsXBound2 fs, fsYBound2 fs,(fsXBound1 fs) - (fsXBound2 fs),(fsYBound1 fs - fsYBound2 fs))
+          (pixTotalW,pixTotalH,inters,eps) =(fsWid fs, fsHei fs,fsIters fs,fsEpsilon fs)
+          fracXAtX x= (toD (x * xStep)*) $ fTotalW / (toD pixTotalW)
+          fracYAtY y= (toD (y * yStep)*) $ fTotalH/ (toD pixTotalH)
+          xStep = pixTotalH `div` xBoxes
+          yStep = pixTotalW `div` yBoxes
 simAnimate' :: FractalSettings -> Int -> FractalSettings
 simAnimate' fs@(FS a b c _ d) frame = nextfs
     where
@@ -78,10 +87,10 @@ anims = [(ParameterShift [psRootCols] [25]),(ParameterShift [psUpperShader] [10]
 
 createFSFromXY :: (Int,Int) -> (Int,Int) -> FractalSettings
 createFSFromXY (hei,wid) (x,y) = fsCreate (fst ffrc) (hei,wid) bounds render (snd ffrc) 40 (0.0001) anim --(f,f') imgDim fracBound renderSettings rootCols maxIters eps animType =
-    where anim = [ParameterShift [psRootCols] [1],Zoom (0:+0) 2]-- :(take (y`mod`4) $drop (x`mod`3) anims)
+    where anim = [Zoom (0:+0) 2,ParameterShift [psRootCols] [1]]-- :(take (y`mod`4) $drop (x`mod`3) anims)
           render = (if even y then DistanceR 40 else Cutoff 40 ((fromIntegral (x+y))/ 1000))
-          bounds = ((20,-20),(20,-20))
-          ffrc = getff' ((x+y)`mod`3)
+          bounds = ((fromIntegral (10+x),fromIntegral (-10 -y)),(fromIntegral (10+x),fromIntegral(-10-y)))
+          ffrc = getff' ((x+y)`mod`4)
 combineListGbyRows :: [[[BSBS.Builder]]] -> [[BSBS.Builder]]
 combineListGbyRows [] = []
 combineListGbyRows (x:[]) = x
@@ -95,5 +104,5 @@ combineGbyRows (r:rows) (r2:rows2) = [ r <> r2 ] ++ combineGbyRows rows rows2
 testFs = fsGenerate 0 (100,100) ((1,-1),(1,-1)) (Cutoff 20 0.001) 20 0.001 [None]
 
 main = do
-       mapM_ (write' (1000,1000) (5,5) "Mozaic") [0..255]
+       mapM_ (write' (1000,1000) (10,10) "Mozaic") [0..20]
        putStrLn "Done"
