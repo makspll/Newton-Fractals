@@ -1,3 +1,6 @@
+# Overview
+TODO: Insert Pictures of fractals and add overview
+
 # Installation
 Prequisites
 * `cabal install BMP`
