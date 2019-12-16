@@ -1,7 +1,7 @@
 # Overview
 The program was the winning submission for the 2018 Haskell Functional Programming Competition @ UoE. The task was to use the skills we learned and apply them to anything fractal related.
 
-(Fractals & Documentation)[https://drive.google.com/file/d/0B8EogF1phOCBM19LOWd5M3o2N25xdklmWllfaEtfYkZOeGRz/view]
+[Fractals & Documentation (google drive)](https://drive.google.com/file/d/0B8EogF1phOCBM19LOWd5M3o2N25xdklmWllfaEtfYkZOeGRz/view)
 # Installation
 Prequisiteshttps://drive.google.com/file/d/0B8EogF1phOCBM19LOWd5M3o2N25xdklmWllfaEtfYkZOeGRz/view
 * `cabal install BMP`
